@@ -3,224 +3,827 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Welcome to Oblu Tools</title>
+  <title>OBLU — Internal Tools Suite</title>
+  <meta name="description" content="OBLU Internal Suite — Your unified productivity tools platform for inventory, sales, invoicing, and analytics." />
   <link rel="icon" type="image/png" href="https://oblu-static-media.s3.ap-south-1.amazonaws.com/vector_panda_logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    * {
+    /* =========================================================
+       ROOT & RESET
+       ========================================================= */
+    *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #0e0e0e, #838383); {#changed the color#}
-      color: #ffffff;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+    :root {
+      --oblu-teal: #78c2ad;
+      --oblu-teal-dark: #469680;
+      --oblu-teal-deep: #2e6958;
+      --oblu-slate-900: #0f172a;
+      --oblu-slate-800: #1e293b;
+      --oblu-slate-700: #334155;
+      --oblu-slate-500: #64748b;
+      --oblu-slate-400: #94a3b8;
+      --oblu-slate-200: #e2e8f0;
+      --oblu-slate-100: #f1f5f9;
+      --oblu-slate-50: #f8fafc;
+
+      --page-bg: #f7f9fc;
+      --card-bg: #ffffff;
+      --card-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(226, 232, 240, 0.7);
+      --card-shadow-hover: 0 12px 32px -8px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(120, 194, 173, 0.3);
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --radius-pill: 9999px;
+
+      --accent-purple: #6366f1;
+      --accent-blue: #38bdf8;
+      --accent-green: #34d399;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
     }
 
-    nav {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(10px);
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--page-bg);
+      color: var(--oblu-slate-800);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Sleek Scrollbar */
+    @supports not selector(::-webkit-scrollbar) {
+      * { scrollbar-width: thin; scrollbar-color: rgba(148,163,184,0.35) transparent; }
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-button { display: none !important; width: 0 !important; height: 0 !important; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.35); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(100,116,139,0.5); }
+
+
+    /* =========================================================
+       INTRO SPLASH SCREEN
+       ========================================================= */
+    .intro-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: var(--oblu-slate-900);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .intro-splash::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(120, 194, 173, 0.2), transparent 70%);
+      animation: introGlowPulse 2s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    @keyframes introGlowPulse {
+      0% { transform: scale(0.8); opacity: 0.3; }
+      100% { transform: scale(1.3); opacity: 0.7; }
+    }
+
+    .intro-logo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 2;
+    }
+
+    .intro-logo {
+      width: 110px;
+      height: 110px;
+      object-fit: contain;
+      opacity: 0;
+      transform: scale(0.3);
+      animation: logoReveal 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
+      filter: drop-shadow(0 0 30px rgba(120, 194, 173, 0.35));
+    }
+
+    @keyframes logoReveal {
+      0%  { opacity: 0; transform: scale(0.3); filter: drop-shadow(0 0 0 rgba(120,194,173,0)); }
+      60% { opacity: 1; transform: scale(1.08); filter: drop-shadow(0 0 50px rgba(120,194,173,0.5)); }
+      100%{ opacity: 1; transform: scale(1);    filter: drop-shadow(0 0 30px rgba(120,194,173,0.3)); }
+    }
+
+    .intro-text {
+      display: flex;
+      align-items: baseline;
+      margin-top: 18px;
+      overflow: hidden;
+    }
+
+    .intro-letter {
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: 10px;
+      color: #fff;
+      opacity: 0;
+      transform: translateY(50px);
+      display: inline-block;
+    }
+
+    .intro-letter:nth-child(1) { animation: letterUp 0.5s cubic-bezier(0.25,1,0.5,1) 0.8s forwards; }
+    .intro-letter:nth-child(2) { animation: letterUp 0.5s cubic-bezier(0.25,1,0.5,1) 0.9s forwards; }
+    .intro-letter:nth-child(3) { animation: letterUp 0.5s cubic-bezier(0.25,1,0.5,1) 1.0s forwards; }
+    .intro-letter:nth-child(4) { animation: letterUp 0.5s cubic-bezier(0.25,1,0.5,1) 1.1s forwards; }
+
+    @keyframes letterUp {
+      0%   { opacity: 0; transform: translateY(50px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .intro-tagline {
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 4px;
+      color: rgba(255,255,255,0.45);
+      text-transform: uppercase;
+      margin-top: 10px;
+      opacity: 0;
+      animation: fadeInSoft 0.6s ease 1.5s forwards;
+    }
+
+    @keyframes fadeInSoft { to { opacity: 1; } }
+
+    .intro-shimmer {
+      position: absolute;
+      bottom: 38%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(120,194,173,0.6), rgba(56,189,248,0.4), transparent);
+      animation: shimmerExpand 0.8s ease 1.4s forwards;
+    }
+
+    @keyframes shimmerExpand { to { width: 240px; } }
+
+    .intro-splash.exit {
+      animation: splashExit 0.8s cubic-bezier(0.4,0,0.2,1) forwards;
+    }
+
+    @keyframes splashExit {
+      0%   { opacity: 1; transform: scale(1); }
+      40%  { opacity: 1; transform: scale(1.02); }
+      100% { opacity: 0; transform: scale(1.12); pointer-events: none; }
+    }
+
+
+    /* =========================================================
+       MAIN CONTENT
+       ========================================================= */
+    .main-content {
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.6s ease 0.1s, visibility 0s 0.1s;
+    }
+
+    .main-content.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+
+    /* =========================================================
+       NAVBAR — Light clean style matching dashboard
+       ========================================================= */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 15px 30px;
-      flex-wrap: wrap;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      padding: 0 32px;
+      height: 64px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--oblu-slate-200);
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03);
     }
 
-    nav a {
-      color: #ffffff;
-      text-decoration: none;
-      font-weight: bold;
-      margin-right: 20px;
-      transition: color 0.3s;
-    }
-
-    nav a:hover {
-      color: #bdbdbd; {# changed the color  #}
-    }
-    .nav-links button {
-      background: #fff; {# changed the color #}
-      border: none;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 0.95rem;
-      font-weight: bold;
-      color: #000;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      text-decoration: none;
-    }
-    .nav-links button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-
-
-
-    nav .brand {
-      font-size: 1.5rem;
-      background: white; {# changed the color from linear gradient to white #}
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    nav .nav-links {
+    .nav-brand {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      gap: 15px;
+      gap: 11px;
+      text-decoration: none;
     }
 
-    .container {
-      text-align: center;
-      padding: 60px 20px;
-      background: white; {# from rgba(255, 255, 255, 0.05) to white #}
-      border-radius: 16px;
-      box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(10px);
-      animation: fadeIn 1s ease-in-out;
-      max-width: 600px;
-      width: 90%;
-      margin: 40px auto;
+    .nav-brand-logo {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      transition: transform 0.3s ease;
     }
 
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 20px;
-      background: #222; {# Changed the color from linear gradient to black #}
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .nav-brand:hover .nav-brand-logo {
+      transform: scale(1.06);
     }
 
-    p {
-      font-size: 1.1rem;
-      margin-bottom: 30px;
-      color: #222; {# from #ccc to #222 #}
+    .nav-brand-name {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 2.5px;
+      color: var(--oblu-slate-900);
     }
 
-    .btn-group {
+    .nav-right {
       display: flex;
-      gap: 20px;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .nav-user {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--oblu-slate-500);
+    }
+
+    .nav-user strong {
+      color: var(--oblu-slate-800);
+      font-weight: 600;
+    }
+
+    .nav-btn-logout {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 18px;
+      border: 1px solid var(--oblu-slate-200);
+      border-radius: var(--radius-pill);
+      background: var(--oblu-slate-50);
+      color: var(--oblu-slate-700);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .nav-btn-logout:hover {
+      background: #fff;
+      border-color: var(--oblu-slate-400);
+      box-shadow: 0 2px 8px rgba(15,23,42,0.06);
+    }
+
+
+    /* =========================================================
+       HERO SECTION — Light clean dashboard theme
+       ========================================================= */
+    .hero {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       justify-content: center;
+      padding: 120px 24px 80px;
+      text-align: center;
+      background:
+        radial-gradient(900px circle at 80% 0%, rgba(120, 194, 173, 0.1), transparent 40%),
+        radial-gradient(700px circle at 10% 60%, rgba(56, 189, 248, 0.05), transparent 40%),
+        var(--page-bg);
+    }
+
+    /* Breadcrumb-style badge */
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 16px 7px 10px;
+      border-radius: var(--radius-pill);
+      background: rgba(120, 194, 173, 0.1);
+      border: 1px solid rgba(120, 194, 173, 0.2);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--oblu-teal-deep);
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.2s forwards;
+    }
+
+    .hero-badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--oblu-teal);
+      animation: dotPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes dotPulse {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.3); }
+    }
+
+    .hero-title {
+      font-size: clamp(32px, 5.5vw, 56px);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      margin-bottom: 16px;
+      color: var(--oblu-slate-900);
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.35s forwards;
+    }
+
+    .hero-title-accent {
+      color: var(--oblu-teal-dark);
+      font-style: italic;
+    }
+
+    .hero-subtitle {
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.7;
+      color: var(--oblu-slate-500);
+      max-width: 440px;
+      margin-bottom: 48px;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.5s forwards;
+    }
+
+    @keyframes fadeUp {
+      0%   { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+
+    /* =========================================================
+       TOOL CARDS — White, clean, matching dashboard cards
+       ========================================================= */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      max-width: 920px;
+      width: 100%;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.65s forwards;
+    }
+
+    .tool-card {
+      position: relative;
+      padding: 28px 24px 22px;
+      border-radius: var(--radius-md);
+      background: var(--card-bg);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      box-shadow: var(--card-shadow);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      color: inherit;
+    }
+
+    .tool-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--card-shadow-hover);
+      border-color: rgba(120, 194, 173, 0.35);
+    }
+
+    /* Top accent line on hover */
+    .tool-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      border-radius: 3px 3px 0 0;
+      background: var(--card-accent-color, var(--oblu-teal));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .tool-card:hover::after {
+      transform: scaleX(1);
+    }
+
+    .tool-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .tool-card-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--oblu-slate-400);
+      line-height: 1.4;
+    }
+
+    .tool-card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.3s ease;
+    }
+
+    .tool-card:hover .tool-card-icon {
+      transform: scale(1.08);
+    }
+
+    .tool-card-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--oblu-slate-900);
+      letter-spacing: -0.5px;
+    }
+
+    .tool-card-desc {
+      font-size: 12.5px;
+      font-weight: 400;
+      line-height: 1.65;
+      color: var(--oblu-slate-500);
+    }
+
+    .tool-card-footer {
+      margin-top: auto;
+      padding-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--oblu-teal-dark);
+      opacity: 0;
+      transform: translateX(-6px);
+      transition: all 0.3s ease;
+    }
+
+    .tool-card:hover .tool-card-footer {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .tool-card-footer svg {
+      transition: transform 0.3s ease;
+    }
+
+    .tool-card:hover .tool-card-footer svg {
+      transform: translateX(3px);
+    }
+
+    /* Card accent colors */
+    .card-inventory { --card-accent-color: var(--oblu-teal); }
+    .card-inventory .tool-card-icon {
+      background: rgba(120, 194, 173, 0.12);
+      color: var(--oblu-teal-dark);
+    }
+
+    .card-meta { --card-accent-color: var(--accent-blue); }
+    .card-meta .tool-card-icon {
+      background: rgba(56, 189, 248, 0.1);
+      color: #0284c7;
+    }
+
+    .card-customers { --card-accent-color: var(--accent-green); }
+    .card-customers .tool-card-icon {
+      background: rgba(52, 211, 153, 0.1);
+      color: #059669;
+    }
+
+    .card-proforma { --card-accent-color: var(--accent-amber); }
+    .card-proforma .tool-card-icon {
+      background: rgba(245, 158, 11, 0.1);
+      color: #d97706;
+    }
+
+
+    /* =========================================================
+       QUICK STATS ROW — Inspired by dashboard stats row
+       ========================================================= */
+    .stats-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      margin-top: 48px;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.85s forwards;
       flex-wrap: wrap;
     }
 
-    .btn {
-      background: #222; {# changed the color from linear gradient to black #}
-      border: none;
-      padding: 14px 28px;
-      border-radius: 50px;
-      font-size: 1rem;
-      font-weight: bold;
-      color: #fff; {#  color changed from black to white #}
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    .btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    .stat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
     }
 
-    footer {
+    .stat-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--oblu-slate-400);
+    }
+
+    .stat-value {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--oblu-slate-800);
+    }
+
+    .stat-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--oblu-slate-200);
+    }
+
+
+    /* =========================================================
+       FOOTER
+       ========================================================= */
+    .site-footer {
+      position: relative;
+      z-index: 1;
       text-align: center;
-      font-size: 0.9rem;
-      color: #888;
-      margin: 20px 0;
+      padding: 32px 24px 28px;
+      border-top: 1px solid var(--oblu-slate-200);
     }
 
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .footer-text {
+      font-size: 11.5px;
+      font-weight: 400;
+      color: var(--oblu-slate-400);
+      letter-spacing: 0.5px;
     }
 
+    .footer-text strong {
+      color: var(--oblu-slate-600);
+      font-weight: 600;
+    }
+
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
     @media (max-width: 768px) {
-      nav {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-      }
+      .navbar { padding: 0 18px; height: 56px; }
+      .nav-brand-name { font-size: 13px; letter-spacing: 2px; }
+      .hero { padding: 90px 18px 50px; }
+      .tools-grid { grid-template-columns: 1fr 1fr; max-width: 480px; gap: 14px; }
+      .intro-logo { width: 80px; height: 80px; }
+      .intro-letter { font-size: 36px; letter-spacing: 7px; }
+      .stats-row { gap: 20px; }
+    }
 
-      .nav-links {
-        flex-direction: column;
-        width: 100%;
-        gap: 10px;
-      }
-
-      .container {
-        margin-top: 30px;
-        padding: 30px 15px;
-      }
-
-      h1 {
-        font-size: 2rem;
-      }
+    @media (max-width: 520px) {
+      .tools-grid { grid-template-columns: 1fr; max-width: 360px; }
+      .nav-user { display: none; }
+      .stat-divider { display: none; }
+      .stats-row { flex-direction: column; gap: 12px; }
     }
   </style>
 </head>
 <body>
 
-  <nav>
-    <div class="brand">
-      <a href="">Oblu Tools</a>
+  <!-- =========================================================
+       INTRO SPLASH SCREEN
+       ========================================================= -->
+  <div class="intro-splash" id="introSplash">
+    <div class="intro-logo-container">
+      <img
+        src="https://oblu-static-media.s3.ap-south-1.amazonaws.com/vector_panda_logo.png"
+        alt="OBLU Logo"
+        class="intro-logo"
+      />
+      <div class="intro-text">
+        <span class="intro-letter">O</span>
+        <span class="intro-letter">B</span>
+        <span class="intro-letter">L</span>
+        <span class="intro-letter">U</span>
+      </div>
+      <div class="intro-tagline">Internal Tools Suite</div>
     </div>
-    <div class="nav-links">
-      {% if user.is_authenticated %}
-        <a href="#">Hi, {{ user.username }}</a>
-        <form action="{% url 'logout' %}" method="POST">
-                            {% csrf_token %}
-                            <button type="submit" class="nav-link">
-                                Logout
-                            </button>
-        </form>
-      {% else %}
-        <a href="{% url 'login' %}">Login</a>
-      {% endif %}
-    </div>
-  </nav>
-
-  <div class="container">
-    <h1>Welcome to Oblu Tools</h1>
-    <p>Your internal suite of productivity tools.</p>
-    <div class="btn-group">
-      {% if request.user.is_accountant %}
-        <button class="btn" onclick="redirectTo('inventory')">Inventory Management</button>
-        <button class="btn" onclick="location.href='/meta/dashboard/'">Meta Dashboard</button>
-      {% endif %}
-      <button class="btn" onclick="redirectTo('customer_data')">Customer and Sales Dashboard</button>
-      <button class="btn" onclick="location.href='/proforma/'">Proforma Invoice & Quotation Maker</button>
-    </div>
+    <div class="intro-shimmer"></div>
   </div>
 
-  <footer>
-    © 2025 Oblu | Internal Use Only
-  </footer>
 
+  <!-- =========================================================
+       MAIN CONTENT
+       ========================================================= -->
+  <div class="main-content" id="mainContent">
+
+
+    <!-- =====================================================
+         NAVBAR
+         ===================================================== -->
+    <nav class="navbar" id="navbar">
+      <a href="" class="nav-brand">
+        <img
+          src="https://oblu-static-media.s3.ap-south-1.amazonaws.com/vector_panda_logo.png"
+          alt="OBLU"
+          class="nav-brand-logo"
+        />
+        <span class="nav-brand-name">OBLU</span>
+      </a>
+      <div class="nav-right">
+        {% if user.is_authenticated %}
+          <span class="nav-user">Welcome, <strong>{{ user.username }}</strong></span>
+          <form action="{% url 'logout' %}" method="POST" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="nav-btn-logout">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Logout
+            </button>
+          </form>
+        {% else %}
+          <a href="{% url 'login' %}" class="nav-btn-logout">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Login
+          </a>
+        {% endif %}
+      </div>
+    </nav>
+
+
+    <!-- =====================================================
+         HERO SECTION
+         ===================================================== -->
+    <section class="hero" id="hero">
+
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Internal Platform
+      </div>
+
+      <h1 class="hero-title">
+        Tools, <span class="hero-title-accent">made smarter.</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Real-time inventory, analytics, customer insights, and invoicing — all from one place.
+      </p>
+
+
+      <!-- =====================================================
+           TOOL CARDS
+           ===================================================== -->
+      <div class="tools-grid">
+
+        {% if request.user.is_accountant %}
+        <!-- Inventory Management -->
+        <a href="/inventory/" class="tool-card card-inventory" id="card-inventory">
+          <div class="tool-card-header">
+            <div class="tool-card-label">INVENTORY<br/>MANAGEMENT</div>
+            <div class="tool-card-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            </div>
+          </div>
+          <div class="tool-card-title">Inventory</div>
+          <div class="tool-card-desc">Stock levels, purchase orders, and supply chain analytics in real time.</div>
+          <div class="tool-card-footer">
+            Open →
+          </div>
+        </a>
+
+        <!-- Meta Dashboard -->
+        <a href="/meta/dashboard/" class="tool-card card-meta" id="card-meta">
+          <div class="tool-card-header">
+            <div class="tool-card-label">META<br/>DASHBOARD</div>
+            <div class="tool-card-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </div>
+          </div>
+          <div class="tool-card-title">Meta Ads</div>
+          <div class="tool-card-desc">Ad performance, campaign analytics, and marketing insights at a glance.</div>
+          <div class="tool-card-footer">
+            Open →
+          </div>
+        </a>
+        {% endif %}
+
+        <!-- Customer & Sales -->
+        <a href="/customers/" class="tool-card card-customers" id="card-customers">
+          <div class="tool-card-header">
+            <div class="tool-card-label">CUSTOMER &amp;<br/>SALES</div>
+            <div class="tool-card-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+          </div>
+          <div class="tool-card-title">Customers</div>
+          <div class="tool-card-desc">Customer data, purchase history, and sales dashboards with deep insights.</div>
+          <div class="tool-card-footer">
+            Open →
+          </div>
+        </a>
+
+        <!-- Proforma & Quotation -->
+        <a href="/proforma/" class="tool-card card-proforma" id="card-proforma">
+          <div class="tool-card-header">
+            <div class="tool-card-label">PROFORMA &amp;<br/>QUOTATIONS</div>
+            <div class="tool-card-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+          </div>
+          <div class="tool-card-title">Invoicing</div>
+          <div class="tool-card-desc">Professional invoices and quotations with one-click PDF export.</div>
+          <div class="tool-card-footer">
+            Open →
+          </div>
+        </a>
+
+      </div>
+
+
+      <!-- =====================================================
+           STATS ROW
+           ===================================================== -->
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-dot" style="background: var(--oblu-teal);"></div>
+          <span class="stat-label">Platform</span>
+          <span class="stat-value">v2.0</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-dot" style="background: var(--accent-green);"></div>
+          <span class="stat-label">Status</span>
+          <span class="stat-value">All Systems Online</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-dot" style="background: var(--accent-blue);"></div>
+          <span class="stat-label">4 Modules</span>
+          <span class="stat-value">Active</span>
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         FOOTER
+         ===================================================== -->
+    <footer class="site-footer">
+      <p class="footer-text">&copy; 2025 <strong>OBLU</strong> &mdash; Internal Use Only</p>
+    </footer>
+
+  </div>
+
+
+  <!-- =========================================================
+       SCRIPTS
+       ========================================================= -->
   <script>
-    function redirectTo(tool) {
-      if (tool === 'inventory') {
-        window.location.href = "/inventory/";
-      } else if (tool === 'quotations') {
-        window.location.href = "/quotations/";
+    // =====================================================
+    // INTRO SPLASH — Auto dismiss
+    // =====================================================
+    (function() {
+      const splash = document.getElementById('introSplash');
+      const main = document.getElementById('mainContent');
+      const hasSeenIntro = sessionStorage.getItem('oblu_intro_seen');
+
+      if (hasSeenIntro) {
+        splash.style.display = 'none';
+        main.classList.add('visible');
+      } else {
+        setTimeout(() => {
+          splash.classList.add('exit');
+          setTimeout(() => {
+            splash.style.display = 'none';
+            main.classList.add('visible');
+            sessionStorage.setItem('oblu_intro_seen', '1');
+          }, 800);
+        }, 2800);
       }
-      else if (tool === 'customer_data') {
-        window.location.href = "/customers/";
-        }
-    }
+    })();
   </script>
 
 </body>

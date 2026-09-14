@@ -41,6 +41,15 @@
     {% block extra_head %}
     {% endblock %}
 
+    <script>
+        (function() {
+            try {
+                if (localStorage.getItem('oblu_sidebar_collapsed') === 'true' && window.innerWidth > 900) {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
+            } catch (e) {}
+        })();
+    </script>
 
     <style>
 
@@ -72,11 +81,43 @@
 
 
         /* =========================================================
-           GLOBAL
+           GLOBAL & SLEEK SCROLLBARS
            ========================================================= */
 
         * {
             box-sizing: border-box;
+        }
+
+        @supports not selector(::-webkit-scrollbar) {
+            * {
+                scrollbar-width: thin;
+                scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-button {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.35);
+            border-radius: 9999px;
+            transition: background 0.2s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 116, 139, 0.6);
         }
 
 
@@ -715,31 +756,106 @@
 
         /* =========================================================
            MOBILE BUTTON
+        /* =========================================================
+           PROFESSIONAL COLLAPSIBLE SIDEBAR & TOGGLE BUTTON
            ========================================================= */
 
-        .sidebar-mobile-toggle {
-
-            display: none;
-
-            width: 34px;
-            height: 34px;
-
-            align-items: center;
-            justify-content: center;
-
-            margin-right: 10px;
-
-            border: 1px solid var(--border);
-
-            border-radius: 8px;
-
-            background: #ffffff;
-
-            color: #64748b;
-
-            cursor: pointer;
+        #sidebar-wrapper {
+            transition: transform .28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow .28s ease;
         }
 
+        #page-content-wrapper {
+            transition: margin-left .28s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Desktop Collapsed Full View State */
+        html.sidebar-collapsed #sidebar-wrapper,
+        body.sidebar-collapsed #sidebar-wrapper {
+            transform: translateX(-100%);
+            box-shadow: none;
+        }
+
+        html.sidebar-collapsed #page-content-wrapper,
+        body.sidebar-collapsed #page-content-wrapper {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+
+        /* Sidebar Toggle Button in Navbar */
+        .sidebar-toggle-btn {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: #ffffff;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+            flex-shrink: 0;
+        }
+
+        .sidebar-toggle-btn:hover {
+            background: rgba(120, 194, 173, 0.16);
+            border-color: #78c2ad;
+            color: #2e6958;
+            transform: translateY(-1px);
+        }
+
+        .sidebar-toggle-btn:active {
+            transform: translateY(0);
+        }
+
+        html.sidebar-collapsed .sidebar-toggle-btn,
+        body.sidebar-collapsed .sidebar-toggle-btn {
+            background: rgba(120, 194, 173, 0.14);
+            border-color: #78c2ad;
+            color: #2e6958;
+        }
+
+        /* Inside Sidebar Collapse Button */
+        .sidebar-collapse-btn {
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--sidebar-border);
+            border-radius: 7px;
+            background: #ffffff;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.18s ease;
+        }
+
+        .sidebar-collapse-btn:hover {
+            background: var(--hover-bg);
+            border-color: #cbd5e1;
+            color: #1e293b;
+        }
+
+        /* Mobile Backdrop */
+        .sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(2px);
+            z-index: 1050;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .sidebar-backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
 
         /* =========================================================
            RESPONSIVE
@@ -748,31 +864,23 @@
         @media (max-width: 900px) {
 
             #sidebar-wrapper {
-
                 transform: translateX(-100%);
+                box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
             }
 
-
             #sidebar-wrapper.mobile-open {
-
                 transform: translateX(0);
             }
 
-
             #page-content-wrapper {
-
                 margin-left: 0;
             }
 
-
-            .sidebar-mobile-toggle {
-
-                display: inline-flex;
+            .sidebar-collapse-btn {
+                display: none;
             }
 
-
             .inventory-content {
-
                 padding: 18px;
             }
         }
@@ -820,18 +928,24 @@
 
         <div class="sidebar-heading">
 
-            <div class="sidebar-brand-icon">
-
-                <i class="bi bi-box-seam-fill"></i>
-
+            <div class="d-flex align-items-center gap-2">
+                <div class="sidebar-brand-icon">
+                    <i class="bi bi-box-seam-fill"></i>
+                </div>
+                <span class="sidebar-brand-text">
+                    Oblu Inventory
+                </span>
             </div>
 
-
-            <span class="sidebar-brand-text">
-
-                Oblu Inventory
-
-            </span>
+            <button
+                type="button"
+                class="sidebar-collapse-btn ms-auto"
+                id="sidebarCollapseInside"
+                title="Hide Sidebar (Ctrl + B)"
+                aria-label="Collapse Sidebar"
+            >
+                <i class="bi bi-chevron-left"></i>
+            </button>
 
         </div>
 
@@ -862,6 +976,23 @@
 
                 <span>
                     Dashboard
+                </span>
+
+            </a>
+
+
+            <!-- PRODUCTS -->
+
+            <a
+                href="{% url 'products' %}"
+                class="sidebar-link"
+                data-main-url="products"
+            >
+
+                <i class="bi bi-boxes"></i>
+
+                <span>
+                    Products
                 </span>
 
             </a>
@@ -1018,23 +1149,6 @@
             </a>
 
 
-            <!-- =================================================
-                 DEAD STOCK
-                 ================================================= -->
-
-            <a
-                href="{% url 'dead_stock' %}"
-                class="sidebar-link"
-                data-main-url="dead_stock"
-            >
-
-                <i class="bi bi-snow"></i>
-
-                <span>
-                    Dead Stock
-                </span>
-
-            </a>
 
 
         </div>
@@ -1092,17 +1206,15 @@
 
             <div class="d-flex align-items-center">
 
-
                 <button
                     type="button"
-                    class="sidebar-mobile-toggle"
-                    id="mobileSidebarToggle"
+                    class="sidebar-toggle-btn"
+                    id="sidebarToggle"
+                    title="Toggle Sidebar (Ctrl + B)"
+                    aria-label="Toggle Sidebar"
                 >
-
-                    <i class="bi bi-list"></i>
-
+                    <i class="bi bi-layout-sidebar-inset"></i>
                 </button>
-
 
                 <nav aria-label="breadcrumb">
 
@@ -1445,6 +1557,25 @@ document.addEventListener(
 
 
                     /*
+                     * Products
+                     */
+
+                    if (
+                        target ===
+                        "products" &&
+                        currentPath.includes(
+                            "/inventory/product"
+                        )
+                    ) {
+
+                        link.classList.add(
+                            "active"
+                        );
+
+                    }
+
+
+                    /*
                      * Categories
                      */
 
@@ -1526,79 +1657,109 @@ document.addEventListener(
 
 
         /* =====================================================
-           MOBILE SIDEBAR
+           PROFESSIONAL SIDEBAR CONTROLLER (DESKTOP & MOBILE)
            ===================================================== */
 
-        const mobileToggle =
-            document.getElementById(
-                "mobileSidebarToggle"
-            );
+        const sidebarToggle = document.getElementById("sidebarToggle");
+        const sidebarCollapseInside = document.getElementById("sidebarCollapseInside");
+        const sidebar = document.getElementById("sidebar-wrapper");
+        const sidebarBackdrop = document.getElementById("sidebarBackdrop");
 
-
-        const sidebar =
-            document.getElementById(
-                "sidebar-wrapper"
-            );
-
-
-        if (mobileToggle) {
-
-            mobileToggle.addEventListener(
-                "click",
-                function () {
-
-                    sidebar.classList.toggle(
-                        "mobile-open"
-                    );
-
-                }
-            );
-
+        function isCollapsed() {
+            return document.body.classList.contains("sidebar-collapsed") ||
+                   document.documentElement.classList.contains("sidebar-collapsed");
         }
 
+        function updateToggleIcon() {
+            if (!sidebarToggle) return;
+            const icon = sidebarToggle.querySelector("i");
+            if (!icon) return;
 
-        /* =====================================================
-           CLOSE MOBILE SIDEBAR
-           ===================================================== */
-
-        document.addEventListener(
-            "click",
-            function (event) {
-
-                if (
-                    window.innerWidth > 900
-                ) {
-                    return;
-                }
-
-
-                if (
-                    !sidebar.classList.contains(
-                        "mobile-open"
-                    )
-                ) {
-                    return;
-                }
-
-
-                if (
-                    sidebar.contains(
-                        event.target
-                    ) ||
-                    mobileToggle.contains(
-                        event.target
-                    )
-                ) {
-                    return;
-                }
-
-
-                sidebar.classList.remove(
-                    "mobile-open"
-                );
-
+            if (window.innerWidth <= 900) {
+                const isOpen = sidebar.classList.contains("mobile-open");
+                icon.className = isOpen ? "bi bi-x-lg" : "bi bi-list";
+                sidebarToggle.setAttribute("title", isOpen ? "Close Navigation" : "Open Navigation");
+            } else {
+                const collapsed = isCollapsed();
+                icon.className = collapsed ? "bi bi-layout-sidebar" : "bi bi-layout-sidebar-inset";
+                sidebarToggle.setAttribute("title", collapsed ? "Open Sidebar (Ctrl + B)" : "Collapse Sidebar (Ctrl + B)");
             }
-        );
+        }
+
+        function toggleSidebar() {
+            if (window.innerWidth <= 900) {
+                // Mobile drawer
+                const isOpen = sidebar.classList.toggle("mobile-open");
+                if (sidebarBackdrop) {
+                    sidebarBackdrop.classList.toggle("active", isOpen);
+                }
+            } else {
+                // Desktop full-view expand / collapse
+                const willCollapse = !isCollapsed();
+                if (willCollapse) {
+                    document.body.classList.add("sidebar-collapsed");
+                    document.documentElement.classList.add("sidebar-collapsed");
+                    localStorage.setItem("oblu_sidebar_collapsed", "true");
+                } else {
+                    document.body.classList.remove("sidebar-collapsed");
+                    document.documentElement.classList.remove("sidebar-collapsed");
+                    localStorage.setItem("oblu_sidebar_collapsed", "false");
+                }
+            }
+            updateToggleIcon();
+        }
+
+        // Initialize state
+        if (window.innerWidth > 900 && localStorage.getItem("oblu_sidebar_collapsed") === "true") {
+            document.body.classList.add("sidebar-collapsed");
+            document.documentElement.classList.add("sidebar-collapsed");
+        }
+        updateToggleIcon();
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener("click", toggleSidebar);
+        }
+
+        if (sidebarCollapseInside) {
+            sidebarCollapseInside.addEventListener("click", toggleSidebar);
+        }
+
+        if (sidebarBackdrop) {
+            sidebarBackdrop.addEventListener("click", function() {
+                sidebar.classList.remove("mobile-open");
+                sidebarBackdrop.classList.remove("active");
+                updateToggleIcon();
+            });
+        }
+
+        // Keyboard shortcut: Ctrl + B or Cmd + B
+        document.addEventListener("keydown", function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+                e.preventDefault();
+                toggleSidebar();
+            }
+        });
+
+        // Close mobile drawer on resize to desktop
+        window.addEventListener("resize", function() {
+            if (window.innerWidth > 900) {
+                sidebar.classList.remove("mobile-open");
+                if (sidebarBackdrop) sidebarBackdrop.classList.remove("active");
+            }
+            updateToggleIcon();
+        });
+
+        // Close mobile drawer if clicked outside
+        document.addEventListener("click", function (event) {
+            if (window.innerWidth > 900) return;
+            if (!sidebar.classList.contains("mobile-open")) return;
+            if (sidebar.contains(event.target) || (sidebarToggle && sidebarToggle.contains(event.target))) {
+                return;
+            }
+            sidebar.classList.remove("mobile-open");
+            if (sidebarBackdrop) sidebarBackdrop.classList.remove("active");
+            updateToggleIcon();
+        });
 
 
     }
@@ -1606,10 +1767,10 @@ document.addEventListener(
 
 </script>
 
-
 {% block extra_js %}
 {% endblock %}
 
+<div id="sidebarBackdrop" class="sidebar-backdrop"></div>
 
 </body>
 

@@ -92,6 +92,14 @@ def validity_default():
     return timezone.now() + timedelta(weeks=2)
 
 
+def dispatch_upload_path(instance, filename):
+    return f"dispatch_photos/{filename}"
+
+
+def dispatch_invoice_upload_path(instance, filename):
+    return f"dispatch_invoices/{filename}"
+
+
 class ProformaInvoice(models.Model):
     """
     The main proforma invoice model — similar to a quotation but restricted to items in stock.

@@ -28,7 +28,7 @@
                     <tr>
                         <th scope="row">{{ category.id }}</th>
                         <td>{{ category.name }}</td>
-                        <td><a href="{% url 'category_dashboard' category.id %}" class="btn btn-secondary">View</a></td>
+                        <td><a href="{% url 'category_products' category.id %}" class="btn btn-secondary">View Products</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>

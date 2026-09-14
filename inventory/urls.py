@@ -5,14 +5,18 @@ from .views import Index, SignUpView, LogoutView, Dashboard, Dashboard2, AddItem
     ShowProductStockHistory, stock_chart_view_3, predict_min_stock_from_daily, CategoryDashboard, CategoryListView, \
     search_items, InventoryReportView, MonthlyStockChartView, PredictMinStockView, LowStockReportView, \
     DailyStockChartView, DeadStockDashboardView, SalesComparisonDashboardView, get_inventory_by_category, \
-    PurchaseOrderView, TopCustomersAPIView, PurchaseOrderViewPrev  # this Index is name of the class we created in views
+    PurchaseOrderView, TopCustomersAPIView, PurchaseOrderViewPrev, ProductListView  # this Index is name of the class we created in views
 from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
     path('', Index.as_view(), name="index"),
-    path('dashboard/', Dashboard.as_view(), name="dashboard"),
+    path('dashboard/', Index.as_view(), name="dashboard"),
     path('dashboard-test/', Dashboard2.as_view(), name="dashboard-test"),
+    path('products/', ProductListView.as_view(), name="products"),
+    path('products/<int:category>/', ProductListView.as_view(), name="category_products"),
+    path('product/', ProductListView.as_view(), name="product"),
+    path('product/<int:category>/', ProductListView.as_view(), name="product_by_category"),
     path('add-item/',AddItem.as_view(), name='add-item'),
     # path('edit-item/<int:pk>', EditItem.as_view(), name='edit-item'),
     # path('delete-item/<int:pk>',DeleteItem.as_view(), name='delete-item'),
@@ -22,7 +26,7 @@ urlpatterns = [
     path('charts/<int:pk>/', DailyStockChartView.as_view(), name='stock_chart_2'),
     path('predict/<int:pk>/', PredictMinStockView.as_view() , name='predict_min_stock'),
     path('history/<int:pk>/',ShowProductStockHistory.as_view(), name='history'),
-    path('dashboard/<int:category>/',CategoryDashboard.as_view(), name='category_dashboard'),
+    path('dashboard/<int:category>/', ProductListView.as_view(), name='category_dashboard'),
     path('categories/',CategoryListView.as_view(), name='categories'),
     path('search/', search_items, name='search_items'),
     path('report/', InventoryReportView.as_view(), name='inventory_report'),
