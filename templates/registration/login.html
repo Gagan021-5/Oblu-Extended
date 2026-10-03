@@ -1,9 +1,13 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Login | Oblu Tools</title>
+  <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+  <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+  <link rel="apple-touch-icon" href="{% static 'images/oblu_panda_icon.png' %}">
   <style>
     body {
       margin: 0;
@@ -117,6 +121,11 @@
 </head>
 <body>
   <div class="auth-container">
+    <div style="display: flex; justify-content: center; margin-bottom: 16px;">
+      <div style="width: 68px; height: 68px; border-radius: 18px; background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,0.15); border: 1px solid #222;">
+        <img src="{% static 'images/oblu_panda_icon.png' %}" alt="OBLU Panda" style="width: 100%; height: 100%; object-fit: cover;">
+      </div>
+    </div>
     <h2>Login to Oblu Tools</h2>
     <form method="post">
       {% csrf_token %}

@@ -13,6 +13,12 @@ class Voucher(models.Model):
     party_name = models.CharField(max_length=255)
     voucher_category = models.CharField(max_length=255)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['voucher_type', 'date']),
+            models.Index(fields=['date']),
+        ]
+
     def __str__(self):
         return f"{self.voucher_type} {self.voucher_number} - {self.party_name}"
 
@@ -66,6 +72,9 @@ class VoucherStockItem(models.Model):
                 ],
                 name="unique_stock_item_per_voucher"
             )
+        ]
+        indexes = [
+            models.Index(fields=["voucher", "item"]),
         ]
     def save(self, *args, **kwargs):
         # always positive

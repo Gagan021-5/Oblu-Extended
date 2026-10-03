@@ -89,14 +89,21 @@
             radial-gradient(900px circle at 50% 110%, rgba(99, 102, 241, 0.05), transparent 50%),
             #f8fafc;
         color: var(--oblu-slate-800);
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: hidden;
     }
 
     .content-wrapper {
         max-width: 1360px;
+        width: 100%;
+        min-width: 0;
         margin: 0 auto;
         display: flex;
         flex-direction: column;
         gap: 28px;
+        box-sizing: border-box;
     }
 
     /* =========================================================
@@ -1350,6 +1357,374 @@
         background: var(--oblu-slate-300);
     }
 
+    /* =========================================================
+       RESPONSIVE (LAPTOPS, TABLETS & SMARTPHONES)
+       ========================================================= */
+
+    @media (max-width: 1200px) {
+        .equal-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .dashboard-container {
+            padding: 16px 12px 48px;
+        }
+
+        .content-wrapper {
+            gap: 20px;
+        }
+
+        .hero-strip {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .controls-cluster {
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .filter-pills-bar {
+            width: 100%;
+            max-width: 100%;
+            display: flex;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 4px;
+        }
+
+        .grid-2-col {
+            grid-template-columns: 1fr;
+        }
+
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+
+        .kpi-primary-val {
+            font-size: 1.65rem;
+        }
+
+        .ops-grid {
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 14px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-container {
+            padding: 12px 8px 40px;
+        }
+
+        .hero-title {
+            font-size: 1.8rem;
+            letter-spacing: -0.8px;
+            word-break: break-word;
+        }
+
+        .hero-desc {
+            font-size: 0.86rem;
+        }
+
+        .controls-cluster {
+            align-items: stretch;
+            width: 100%;
+        }
+
+        .filter-pills-bar {
+            width: 100%;
+            max-width: 100%;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            padding: 4px;
+            border-radius: 14px;
+            gap: 2px;
+            box-sizing: border-box;
+        }
+
+        .filter-pill {
+            padding: 8px 4px;
+            border-radius: 10px;
+            font-size: 0.76rem;
+            text-align: center;
+            justify-content: center;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        .date-anchor-banner {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            padding: 12px 14px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .date-anchor-info {
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 0.78rem;
+            line-height: 1.45;
+            min-width: 0;
+            word-break: break-word;
+        }
+
+        .date-anchor-info i {
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .date-anchor-info > div {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .anchor-toggle-btn {
+            width: 100%;
+            justify-content: center;
+            padding: 8px 10px;
+            font-size: 0.75rem;
+            text-align: center;
+            white-space: normal;
+            line-height: 1.35;
+            box-sizing: border-box;
+        }
+
+        .dash-panel {
+            padding: 18px 14px;
+            border-radius: 16px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .chart-metric-switch {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .chart-metric-switch .metric-btn {
+            text-align: center;
+            padding: 6px 8px;
+            font-size: 0.72rem;
+        }
+
+        .chart-stats-strip {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 12px;
+            padding: 10px 12px;
+            font-size: 0.75rem;
+        }
+
+        .chart-canvas-wrapper {
+            height: 220px;
+        }
+
+        .cat-meta-row {
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .cat-name-block {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .cat-name-text {
+            font-size: 0.82rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 160px;
+        }
+
+        .cat-metrics-block {
+            gap: 8px;
+            font-size: 0.78rem;
+            flex-shrink: 0;
+        }
+
+        .prod-item-card {
+            padding: 10px 12px;
+            min-width: 0;
+        }
+
+        .prod-main-block {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .prod-name-text {
+            font-size: 0.82rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .cust-item-card {
+            padding: 10px 12px;
+            min-width: 0;
+        }
+
+        .cust-left-block {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .cust-name {
+            font-size: 0.84rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .po-table-container {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            display: block;
+        }
+
+        .po-table {
+            min-width: 520px;
+        }
+
+        .alarm-banner-panel {
+            padding: 18px 14px;
+        }
+
+        .alarm-cards-container {
+            grid-template-columns: 1fr;
+        }
+
+        .alarm-card-item {
+            min-width: 0;
+        }
+
+        .alarm-cta-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .ops-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .ops-card {
+            min-width: 0;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .dashboard-container {
+            padding: 6px 4px 36px;
+        }
+
+        .content-wrapper {
+            gap: 16px;
+        }
+
+        .hero-title {
+            font-size: 1.5rem;
+            letter-spacing: -0.6px;
+        }
+
+        .hero-desc {
+            font-size: 0.82rem;
+        }
+
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .kpi-card {
+            padding: 12px 10px;
+            border-radius: 14px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .kpi-top-row {
+            margin-bottom: 8px;
+        }
+
+        .kpi-title {
+            font-size: 0.67rem;
+            letter-spacing: 0.2px;
+        }
+
+        .kpi-icon-box {
+            width: 32px;
+            height: 32px;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .kpi-primary-val {
+            font-size: 1.15rem;
+            letter-spacing: -0.4px;
+            margin-bottom: 6px;
+            line-height: 1.2;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .kpi-subrow {
+            font-size: 0.67rem;
+            gap: 4px;
+            line-height: 1.35;
+        }
+
+        .trend-indicator {
+            font-size: 0.68rem;
+            padding: 2px 6px;
+        }
+
+        .chart-stats-strip {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .chart-canvas-wrapper {
+            height: 190px;
+        }
+    }
+
+    @media (max-width: 380px) {
+        .filter-pill {
+            font-size: 0.7rem;
+            padding: 6px 1px;
+        }
+
+        .kpi-grid {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .kpi-primary-val {
+            font-size: 1.3rem;
+        }
+    }
+
 </style>
 
 <div class="dashboard-container">
@@ -1999,135 +2374,149 @@
      ========================================================= -->
 {% if trend_has_data %}
 <script>
-let velocityChart = null;
-const labelsData = {{ trend_labels_json|safe }};
-const valuesData = {{ trend_values_json|safe }};
-const quantitiesData = {{ trend_quantities_json|safe }};
-const ordersData = {{ trend_orders_json|safe }};
+(function() {
+    window.currentVelocityMetric = 'value';
+    const labelsData = {{ trend_labels_json|safe }};
+    const valuesData = {{ trend_values_json|safe }};
+    const quantitiesData = {{ trend_quantities_json|safe }};
+    const ordersData = {{ trend_orders_json|safe }};
 
-function formatIndianNumber(num) {
-    if (num >= 10000000) return '₹' + (num / 10000000).toFixed(2) + ' Cr';
-    if (num >= 100000) return '₹' + (num / 100000).toFixed(2) + ' L';
-    if (num >= 1000) return '₹' + (num / 1000).toFixed(1) + ' k';
-    return '₹' + num.toLocaleString();
-}
+    function formatIndianNumber(num) {
+        if (num >= 10000000) return '₹' + (num / 10000000).toFixed(2) + ' Cr';
+        if (num >= 100000) return '₹' + (num / 100000).toFixed(2) + ' L';
+        if (num >= 1000) return '₹' + (num / 1000).toFixed(1) + ' k';
+        return '₹' + num.toLocaleString();
+    }
 
-document.addEventListener("DOMContentLoaded", function () {
-    const ctx = document.getElementById('salesVelocityChart');
-    if (!ctx) return;
+    function initDashboardCharts() {
+        const ctx = document.getElementById('salesVelocityChart');
+        if (!ctx) return;
 
-    const chartContext = ctx.getContext('2d');
-    const gradient = chartContext.createLinearGradient(0, 0, 0, 240);
-    gradient.addColorStop(0, 'rgba(120, 194, 173, 0.38)');
-    gradient.addColorStop(0.7, 'rgba(120, 194, 173, 0.08)');
-    gradient.addColorStop(1, 'rgba(120, 194, 173, 0.00)');
+        if (typeof Chart === 'undefined') {
+            console.warn("Chart.js not yet loaded, retrying...");
+            setTimeout(initDashboardCharts, 80);
+            return;
+        }
 
-    velocityChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labelsData,
-            datasets: [{
-                label: 'Sales Revenue (₹)',
-                data: valuesData,
-                borderColor: '#469680',
-                borderWidth: 2.5,
-                backgroundColor: gradient,
-                fill: true,
-                tension: 0.38,
-                pointRadius: labelsData.length > 25 ? 0 : 3.5,
-                pointHoverRadius: 6,
-                pointBackgroundColor: '#ffffff',
-                pointBorderColor: '#469680',
-                pointBorderWidth: 2.5,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false,
+        if (window.velocityChart && typeof window.velocityChart.destroy === 'function') {
+            window.velocityChart.destroy();
+            window.velocityChart = null;
+        }
+
+        const chartContext = ctx.getContext('2d');
+        const gradient = chartContext.createLinearGradient(0, 0, 0, 240);
+        gradient.addColorStop(0, 'rgba(120, 194, 173, 0.38)');
+        gradient.addColorStop(0.7, 'rgba(120, 194, 173, 0.08)');
+        gradient.addColorStop(1, 'rgba(120, 194, 173, 0.00)');
+
+        window.velocityChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labelsData,
+                datasets: [{
+                    label: 'Sales Revenue (₹)',
+                    data: valuesData,
+                    borderColor: '#469680',
+                    borderWidth: 2.5,
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.38,
+                    pointRadius: labelsData.length > 25 ? 0 : 3.5,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#469680',
+                    pointBorderWidth: 2.5,
+                }]
             },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#0f172a',
-                    titleColor: '#94a3b8',
-                    titleFont: { size: 11, weight: '600' },
-                    bodyColor: '#ffffff',
-                    bodyFont: { size: 13, weight: '700' },
-                    padding: 12,
-                    cornerRadius: 10,
-                    displayColors: false,
-                    callbacks: {
-                        label: function (context) {
-                            if (currentMetric === 'value') {
-                                return 'Sales: ' + formatIndianNumber(context.parsed.y);
-                            } else {
-                                return 'Dispatched: ' + context.parsed.y.toLocaleString() + ' orders';
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.94)',
+                        titleColor: '#ffffff',
+                        titleFont: { size: 11, weight: '600' },
+                        bodyColor: '#e2e8f0',
+                        bodyFont: { size: 13, weight: '700' },
+                        padding: 12,
+                        cornerRadius: 10,
+                        borderColor: 'rgba(226, 232, 240, 0.2)',
+                        borderWidth: 1,
+                        displayColors: false,
+                        callbacks: {
+                            label: function (c) {
+                                const val = c.parsed.y;
+                                return window.currentVelocityMetric === 'value' ? '₹' + val.toLocaleString() : val.toLocaleString() + ' orders';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            color: '#94a3b8',
+                            font: { size: 11 },
+                            maxRotation: 0,
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(226, 232, 240, 0.6)',
+                            drawBorder: false,
+                        },
+                        ticks: {
+                            color: '#94a3b8',
+                            font: { size: 11 },
+                            callback: function (val) {
+                                return window.currentVelocityMetric === 'value' ? formatIndianNumber(val) : val.toLocaleString() + ' orders';
                             }
                         }
                     }
                 }
-            },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: {
-                        color: '#94a3b8',
-                        font: { size: 11 },
-                        maxTicksLimit: 12
-                    }
-                },
-                y: {
-                    grid: {
-                        color: 'rgba(226, 232, 240, 0.6)',
-                        drawBorder: false,
-                    },
-                    ticks: {
-                        color: '#94a3b8',
-                        font: { size: 11 },
-                        callback: function (val) {
-                            return currentMetric === 'value' ? formatIndianNumber(val) : val.toLocaleString() + ' orders';
-                        }
-                    }
-                }
             }
-        }
-    });
-});
-
-let currentMetric = 'value';
-function setChartMetric(metric) {
-    if (!velocityChart) return;
-    currentMetric = metric;
-
-    const btnVal = document.getElementById('btnMetricValue');
-    const btnOrders = document.getElementById('btnMetricOrders');
-
-    if (metric === 'value') {
-        btnVal.classList.add('active');
-        btnOrders.classList.remove('active');
-
-        velocityChart.data.datasets[0].label = 'Sales Revenue (₹)';
-        velocityChart.data.datasets[0].data = valuesData;
-        velocityChart.data.datasets[0].borderColor = '#469680';
-        velocityChart.options.scales.y.ticks.callback = function (val) {
-            return formatIndianNumber(val);
-        };
-    } else {
-        btnOrders.classList.add('active');
-        btnVal.classList.remove('active');
-
-        velocityChart.data.datasets[0].label = 'Orders Dispatched';
-        velocityChart.data.datasets[0].data = ordersData;
-        velocityChart.data.datasets[0].borderColor = '#0284c7';
-        velocityChart.options.scales.y.ticks.callback = function (val) {
-            return val.toLocaleString() + ' orders';
-        };
+        });
     }
-    velocityChart.update();
-}
+
+    window.setChartMetric = function(metric) {
+        if (!window.velocityChart) return;
+        window.currentVelocityMetric = metric;
+
+        const btnVal = document.getElementById('btnMetricValue');
+        const btnOrders = document.getElementById('btnMetricOrders');
+
+        if (metric === 'value') {
+            if (btnVal) btnVal.classList.add('active');
+            if (btnOrders) btnOrders.classList.remove('active');
+
+            window.velocityChart.data.datasets[0].label = 'Sales Revenue (₹)';
+            window.velocityChart.data.datasets[0].data = valuesData;
+            window.velocityChart.data.datasets[0].borderColor = '#469680';
+            window.velocityChart.options.scales.y.ticks.callback = function (val) {
+                return formatIndianNumber(val);
+            };
+        } else {
+            if (btnOrders) btnOrders.classList.add('active');
+            if (btnVal) btnVal.classList.remove('active');
+
+            window.velocityChart.data.datasets[0].label = 'Orders Dispatched';
+            window.velocityChart.data.datasets[0].data = ordersData;
+            window.velocityChart.data.datasets[0].borderColor = '#0284c7';
+            window.velocityChart.options.scales.y.ticks.callback = function (val) {
+                return val.toLocaleString() + ' orders';
+            };
+        }
+        window.velocityChart.update();
+    };
+
+    initDashboardCharts();
+    document.addEventListener("turbo:load", initDashboardCharts);
+})();
 </script>
 {% endif %}
 

@@ -64,15 +64,20 @@
         color: var(--oblu-slate-800);
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         overflow-x: hidden;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 
     .catalog-wrapper {
         width: 100%;
         max-width: 100%;
+        min-width: 0;
         margin: 0 auto;
         display: flex;
         flex-direction: column;
         gap: 22px;
+        box-sizing: border-box;
     }
 
     /* =========================================================
@@ -1070,25 +1075,126 @@
         margin: 0 auto 16px;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 992px) {
         .prod-catalog-container {
-            padding: 16px 16px 48px;
+            padding: 8px 6px 40px;
+        }
+
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
         }
 
         .hero-strip {
             flex-direction: column;
             align-items: flex-start;
+            gap: 14px;
+        }
+
+        .hero-actions {
+            width: 100%;
+            display: flex;
+            gap: 10px;
         }
 
         .command-controls-row {
             flex-direction: column;
             align-items: stretch;
+            gap: 10px;
         }
 
         .filter-pills-bar {
             width: 100%;
             overflow-x: auto;
             justify-content: flex-start;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .prod-catalog-container {
+            padding: 6px 4px 32px;
+        }
+
+        .hero-title {
+            font-size: 1.5rem;
+            letter-spacing: -0.6px;
+        }
+
+        .hero-desc {
+            font-size: 0.82rem;
+        }
+
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .kpi-card {
+            padding: 12px 10px;
+            border-radius: 14px;
+        }
+
+        .kpi-val {
+            font-size: 1.25rem;
+            letter-spacing: -0.4px;
+        }
+
+        .kpi-title {
+            font-size: 0.67rem;
+        }
+
+        .kpi-icon-box {
+            width: 32px;
+            height: 32px;
+            font-size: 0.95rem;
+            border-radius: 9px;
+        }
+
+        .search-kbd {
+            display: none !important;
+        }
+
+        .search-input-box input {
+            padding: 10px 42px 10px 38px;
+            font-size: 0.84rem;
+        }
+
+        .command-bar-card {
+            padding: 12px;
+            border-radius: 14px;
+        }
+
+        .table-glass-card {
+            padding: 12px 6px;
+            border-radius: 14px;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .catalog-table-responsive {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            display: block;
+        }
+
+        .catalog-table {
+            min-width: 680px;
+        }
+
+        .btn-oblu-primary,
+        .btn-oblu-secondary {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 380px) {
+        .kpi-grid {
+            grid-template-columns: 1fr;
+            gap: 8px;
         }
     }
 </style>
@@ -1238,57 +1344,65 @@
         </div>
         {% endif %}
 
-        <!-- 4. SEARCH & COMMAND BAR -->
+        <!-- 4. SEARCH & COMMAND BAR (SERVER POWERED) -->
         <div class="command-bar-card">
             <!-- Row 1: Full-Width Search Input with Autocomplete and Shortcut Badge -->
             <div class="command-search-row">
-                <div id="autocomplete" class="search-input-box">
-                    <i class="bi bi-search search-icon"></i>
-                    <input
-                        id="catalogSearchInput"
-                        class="autocomplete-input"
-                        type="text"
-                        placeholder="Search products by name, SKU ID, or category... (Press / or Ctrl+K)"
-                        autocomplete="off"
-                    />
-                    <div class="search-right-tools">
-                        <button id="searchClearBtn" class="search-clear-btn" type="button" title="Clear search">
-                            <i class="bi bi-x-circle-fill"></i>
-                        </button>
-                        <span class="search-kbd">Ctrl + K</span>
+                <form method="GET" action="" style="width: 100%; margin: 0;">
+                    {% if category %}<input type="hidden" name="category" value="{{ category.id }}">{% endif %}
+                    {% if status_filter and status_filter != 'all' %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+                    <div id="autocomplete" class="search-input-box">
+                        <i class="bi bi-search search-icon"></i>
+                        <input
+                            id="catalogSearchInput"
+                            class="autocomplete-input"
+                            type="text"
+                            name="q"
+                            value="{{ search_query }}"
+                            placeholder="Search products by name, SKU ID, or category... (Press / or Ctrl+K)"
+                            autocomplete="off"
+                        />
+                        <div class="search-right-tools">
+                            {% if search_query %}
+                            <a href="?{% if category %}category={{ category.id }}&{% endif %}{% if status_filter and status_filter != 'all' %}status={{ status_filter }}{% endif %}" id="searchClearBtn" class="search-clear-btn" style="display: flex; text-decoration: none;" title="Clear search">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </a>
+                            {% endif %}
+                            <span class="search-kbd">Ctrl + K</span>
+                        </div>
+                        <ul class="autocomplete-result-list"></ul>
                     </div>
-                    <ul class="autocomplete-result-list"></ul>
-                </div>
+                </form>
             </div>
 
             <!-- Row 2: Status Filters + Counter + View Toggle -->
             <div class="command-controls-row">
                 <!-- Stock Health Status Pills -->
                 <div class="filter-pills-bar">
-                    <button class="filter-pill-btn active" data-filter="all">
-                        All Items ({{ items|length }})
-                    </button>
-                    <button class="filter-pill-btn" data-filter="in-stock">
+                    <a href="?{% if category %}category={{ category.id }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}status=all" class="filter-pill-btn {% if status_filter == 'all' %}active{% endif %}" style="text-decoration: none;">
+                        All Items ({{ total_items }})
+                    </a>
+                    <a href="?{% if category %}category={{ category.id }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}status=in-stock" class="filter-pill-btn {% if status_filter == 'in-stock' %}active{% endif %}" style="text-decoration: none;">
                         <span class="status-dot emerald"></span> In Stock
-                    </button>
-                    <button class="filter-pill-btn" data-filter="low-stock">
-                        <span class="status-dot amber"></span> Low Stock
-                    </button>
-                    <button class="filter-pill-btn" data-filter="out-stock">
-                        <span class="status-dot rose"></span> Out of Stock
-                    </button>
+                    </a>
+                    <a href="?{% if category %}category={{ category.id }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}status=low-stock" class="filter-pill-btn {% if status_filter == 'low-stock' %}active{% endif %}" style="text-decoration: none;">
+                        <span class="status-dot amber"></span> Low Stock ({{ low_stock_count }})
+                    </a>
+                    <a href="?{% if category %}category={{ category.id }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}status=out-stock" class="filter-pill-btn {% if status_filter == 'out-stock' %}active{% endif %}" style="text-decoration: none;">
+                        <span class="status-dot rose"></span> Out of Stock ({{ out_of_stock_count }})
+                    </a>
                 </div>
 
                 <!-- View Toggle: Table / Grid + Counter -->
                 <div class="d-flex align-items-center gap-3">
                     <div class="items-count-badge">
-                        Showing <strong id="visibleCount">{{ items|length }}</strong> of {{ items|length }}
+                        Showing <strong>{{ page_obj.start_index }}–{{ page_obj.end_index }}</strong> of {{ matching_count }}
                     </div>
                     <div class="view-toggle-group">
-                        <button id="btnTableView" class="view-toggle-btn active" title="Table View">
+                        <button id="btnTableView" class="view-toggle-btn active" title="Table View" type="button">
                             <i class="bi bi-list-ul"></i>
                         </button>
-                        <button id="btnGridView" class="view-toggle-btn" title="Grid Cards View">
+                        <button id="btnGridView" class="view-toggle-btn" title="Grid Cards View" type="button">
                             <i class="bi bi-grid"></i>
                         </button>
                     </div>
@@ -1312,7 +1426,7 @@
                         </tr>
                     </thead>
                     <tbody id="catalogTableBody">
-                        {% for item in items %}
+                        {% for item in page_obj %}
                         {% with qty=item.quantity|default:0 min_qty=item.min_quantity|default:-1 %}
                         <tr
                             class="product-row"
@@ -1421,7 +1535,7 @@
 
         <!-- 6. GRID CARDS VIEW (TOGGLEABLE) -->
         <div id="gridViewWrapper" class="catalog-grid-view">
-            {% for item in items %}
+            {% for item in page_obj %}
             {% with qty=item.quantity|default:0 min_qty=item.min_quantity|default:-1 %}
             <div
                 class="prod-grid-card product-grid-item"
@@ -1500,35 +1614,68 @@
             {% endfor %}
         </div>
 
-        <!-- 7. EMPTY STATE & PAGINATION (SHARED) -->
-        <div id="emptyCatalogState" class="empty-catalog-state table-glass-card">
+        <!-- 7. EMPTY STATE & SERVER PAGINATION -->
+        {% if not page_obj.object_list %}
+        <div id="emptyCatalogState" class="empty-catalog-state table-glass-card" style="display: block;">
             <div class="empty-icon-circle">
                 <i class="bi bi-search"></i>
             </div>
             <h4 class="empty-title">No matching products found</h4>
-            <p class="empty-desc">We couldn't find any products matching your search or active filter criteria. Try adjusting your search query.</p>
-            <button id="btnResetFilters" class="btn-oblu-secondary">
+            <p class="empty-desc">
+                {% if search_query %}
+                We couldn't find any products matching "<strong>{{ search_query }}</strong>".
+                {% else %}
+                No products found under this category or active filter.
+                {% endif %}
+            </p>
+            <a href="{% if category %}{% url 'category_products' category.id %}{% else %}{% url 'products' %}{% endif %}" class="btn-oblu-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
                 <i class="bi bi-arrow-counterclockwise"></i> Reset Search & Filters
-            </button>
+            </a>
         </div>
+        {% endif %}
 
-        <!-- Client-Side Pagination Strip -->
+        <!-- Server Pagination Strip (HTML Only) -->
+        {% if is_paginated %}
         <div id="paginationBar" class="pagination-cluster table-glass-card">
             <div class="page-info-text">
-                Page <strong id="currentPageNum">1</strong> of <strong id="totalPageNum">1</strong>
+                Page <strong>{{ page_obj.number }}</strong> of <strong>{{ paginator.num_pages }}</strong>
+                <span class="text-muted ms-2">({{ matching_count }} total items)</span>
             </div>
-            <div class="d-flex align-items-center gap-2">
-                <button id="btnPrevPage" class="btn-page-nav" disabled>
-                    <i class="bi bi-chevron-left"></i> Previous
-                </button>
-                <button id="btnNextPage" class="btn-page-nav">
+            <div class="d-flex align-items-center gap-1 flex-wrap">
+                {% if page_obj.has_previous %}
+                <a href="?page=1{% if preserved_query %}&{{ preserved_query }}{% endif %}" class="btn-page-nav" title="First Page" style="text-decoration: none;">
+                    <i class="bi bi-chevron-double-left"></i> First
+                </a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if preserved_query %}&{{ preserved_query }}{% endif %}" class="btn-page-nav" style="text-decoration: none;">
+                    <i class="bi bi-chevron-left"></i> Prev
+                </a>
+                {% else %}
+                <button class="btn-page-nav" disabled><i class="bi bi-chevron-left"></i> Prev</button>
+                {% endif %}
+
+                {% for num in paginator.page_range %}
+                    {% if num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                        {% if page_obj.number == num %}
+                        <span class="btn-page-nav active" style="background: var(--oblu-teal); color: #fff; border-color: var(--oblu-teal); font-weight: 700;">{{ num }}</span>
+                        {% else %}
+                        <a href="?page={{ num }}{% if preserved_query %}&{{ preserved_query }}{% endif %}" class="btn-page-nav" style="text-decoration: none;">{{ num }}</a>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if preserved_query %}&{{ preserved_query }}{% endif %}" class="btn-page-nav" style="text-decoration: none;">
                     Next <i class="bi bi-chevron-right"></i>
-                </button>
-                <button id="btnShowAll" class="btn-page-nav ms-2" title="Display all matching items without pagination">
-                    Show All
-                </button>
+                </a>
+                <a href="?page={{ paginator.num_pages }}{% if preserved_query %}&{{ preserved_query }}{% endif %}" class="btn-page-nav" title="Last Page" style="text-decoration: none;">
+                    Last <i class="bi bi-chevron-double-right"></i>
+                </a>
+                {% else %}
+                <button class="btn-page-nav" disabled>Next <i class="bi bi-chevron-right"></i></button>
+                {% endif %}
             </div>
         </div>
+        {% endif %}
 
     </div>
 </div>
@@ -1541,204 +1688,61 @@
 {% endif %}
 
 <!-- =========================================================
-     JAVASCRIPT: LIVE FILTERING, SEARCH & PAGINATION
+     JAVASCRIPT: VIEW TOGGLE, SHORTCUTS & AUTOCOMPLETE
      ========================================================= -->
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+function initCatalogApp() {
     const searchInput = document.getElementById('catalogSearchInput');
-    const searchClearBtn = document.getElementById('searchClearBtn');
-    const tableRows = Array.from(document.querySelectorAll('.product-row'));
-    const gridCards = Array.from(document.querySelectorAll('.product-grid-item'));
-    const filterPills = document.querySelectorAll('.filter-pill-btn');
-    const visibleCountEl = document.getElementById('visibleCount');
-    const emptyStateEl = document.getElementById('emptyCatalogState');
-    const paginationBar = document.getElementById('paginationBar');
-    const btnPrevPage = document.getElementById('btnPrevPage');
-    const btnNextPage = document.getElementById('btnNextPage');
-    const btnShowAll = document.getElementById('btnShowAll');
-    const currentPageNumEl = document.getElementById('currentPageNum');
-    const totalPageNumEl = document.getElementById('totalPageNum');
     const btnTableView = document.getElementById('btnTableView');
     const btnGridView = document.getElementById('btnGridView');
     const tableViewWrapper = document.getElementById('tableViewWrapper');
     const gridViewWrapper = document.getElementById('gridViewWrapper');
-    const btnResetFilters = document.getElementById('btnResetFilters');
 
-    let currentFilter = 'all';
-    let searchQuery = '';
-    let currentPage = 1;
-    let itemsPerPage = 50;
-    let showAllMode = false;
-
-    // View toggle handler
-    btnTableView.addEventListener('click', () => {
-        btnTableView.classList.add('active');
-        btnGridView.classList.remove('active');
-        tableViewWrapper.style.display = 'block';
-        gridViewWrapper.style.display = 'none';
-        applyFilters();
-    });
-
-    btnGridView.addEventListener('click', () => {
+    // View toggle handler with localStorage persistence
+    const savedView = localStorage.getItem('oblu_catalog_view') || 'table';
+    if (savedView === 'grid' && btnGridView && gridViewWrapper) {
         btnGridView.classList.add('active');
         btnTableView.classList.remove('active');
         tableViewWrapper.style.display = 'none';
         gridViewWrapper.style.display = 'grid';
-        applyFilters();
-    });
+    }
+
+    if (btnTableView && btnGridView) {
+        btnTableView.addEventListener('click', () => {
+            btnTableView.classList.add('active');
+            btnGridView.classList.remove('active');
+            tableViewWrapper.style.display = 'block';
+            gridViewWrapper.style.display = 'none';
+            localStorage.setItem('oblu_catalog_view', 'table');
+        });
+
+        btnGridView.addEventListener('click', () => {
+            btnGridView.classList.add('active');
+            btnTableView.classList.remove('active');
+            tableViewWrapper.style.display = 'none';
+            gridViewWrapper.style.display = 'grid';
+            localStorage.setItem('oblu_catalog_view', 'grid');
+        });
+    }
 
     // Keyboard shortcut Ctrl+K or / to focus search
-    document.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-            e.preventDefault();
-            searchInput.focus();
-            searchInput.select();
-        } else if (e.key === '/' && document.activeElement !== searchInput) {
-            e.preventDefault();
-            searchInput.focus();
-            searchInput.select();
-        }
-    });
-
-    // Status filter pill click
-    filterPills.forEach(pill => {
-        pill.addEventListener('click', () => {
-            filterPills.forEach(p => p.classList.remove('active'));
-            pill.classList.add('active');
-            currentFilter = pill.dataset.filter;
-            currentPage = 1;
-            applyFilters();
-        });
-    });
-
-    // Search query live filter
-    searchInput.addEventListener('input', (e) => {
-        searchQuery = e.target.value.trim().toLowerCase();
-        searchClearBtn.style.display = searchQuery ? 'flex' : 'none';
-        currentPage = 1;
-        applyFilters();
-    });
-
-    searchClearBtn.addEventListener('click', () => {
-        searchInput.value = '';
-        searchQuery = '';
-        searchClearBtn.style.display = 'none';
-        searchInput.focus();
-        currentPage = 1;
-        applyFilters();
-    });
-
-    // Pagination handlers
-    btnPrevPage.addEventListener('click', () => {
-        if (currentPage > 1) {
-            currentPage--;
-            applyPagination();
-        }
-    });
-
-    btnNextPage.addEventListener('click', () => {
-        const matchingRows = getMatchingItems(tableRows);
-        const totalPages = Math.ceil(matchingRows.length / itemsPerPage);
-        if (currentPage < totalPages) {
-            currentPage++;
-            applyPagination();
-        }
-    });
-
-    btnShowAll.addEventListener('click', () => {
-        showAllMode = !showAllMode;
-        btnShowAll.textContent = showAllMode ? "Paginate (50/pg)" : "Show All";
-        currentPage = 1;
-        applyPagination();
-    });
-
-    // Reset filters
-    btnResetFilters.addEventListener('click', () => {
-        searchInput.value = '';
-        searchQuery = '';
-        searchClearBtn.style.display = 'none';
-        currentFilter = 'all';
-        filterPills.forEach(p => p.classList.remove('active'));
-        filterPills[0].classList.add('active');
-        currentPage = 1;
-        applyFilters();
-    });
-
-    function getMatchingItems(elements) {
-        return elements.filter(el => {
-            const name = el.dataset.name || '';
-            const id = el.dataset.id || '';
-            const category = el.dataset.category || '';
-            const status = el.dataset.status || '';
-
-            const matchesSearch = !searchQuery ||
-                name.includes(searchQuery) ||
-                id.includes(searchQuery) ||
-                category.includes(searchQuery);
-
-            const matchesStatus = currentFilter === 'all' || status === currentFilter;
-
-            return matchesSearch && matchesStatus;
+    if (searchInput) {
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            } else if (e.key === '/' && document.activeElement !== searchInput) {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            }
         });
     }
-
-    function applyFilters() {
-        applyPagination();
-    }
-
-    function applyPagination() {
-        const activeWrapperIsTable = btnTableView.classList.contains('active');
-        const elements = activeWrapperIsTable ? tableRows : gridCards;
-        const matchingElements = getMatchingItems(elements);
-
-        visibleCountEl.textContent = matchingElements.length;
-
-        // Check empty state
-        if (matchingElements.length === 0) {
-            emptyStateEl.style.display = 'block';
-            paginationBar.style.display = 'none';
-            elements.forEach(el => el.style.display = 'none');
-            return;
-        } else {
-            emptyStateEl.style.display = 'none';
-            paginationBar.style.display = 'flex';
-        }
-
-        const totalPages = showAllMode ? 1 : Math.max(1, Math.ceil(matchingElements.length / itemsPerPage));
-        if (currentPage > totalPages) currentPage = totalPages;
-
-        currentPageNumEl.textContent = currentPage;
-        totalPageNumEl.textContent = totalPages;
-
-        btnPrevPage.disabled = currentPage <= 1 || showAllMode;
-        btnNextPage.disabled = currentPage >= totalPages || showAllMode;
-
-        const startIndex = showAllMode ? 0 : (currentPage - 1) * itemsPerPage;
-        const endIndex = showAllMode ? matchingElements.length : startIndex + itemsPerPage;
-
-        // Hide all first
-        elements.forEach(el => el.style.display = 'none');
-
-        // Display current page items
-        matchingElements.slice(startIndex, endIndex).forEach(el => {
-            el.style.display = activeWrapperIsTable ? '' : 'flex';
-        });
-
-        // Also keep the other view synced in memory so switching views doesn't glitch
-        const otherElements = activeWrapperIsTable ? gridCards : tableRows;
-        const otherMatching = getMatchingItems(otherElements);
-        otherElements.forEach(el => el.style.display = 'none');
-        otherMatching.slice(startIndex, endIndex).forEach(el => {
-            el.style.display = activeWrapperIsTable ? 'flex' : '';
-        });
-    }
-
-    // Initialize display
-    applyFilters();
 
     // Server-side Trevor Eyre Autocomplete
     let itemMap = {};
-    if (window.Autocomplete) {
+    if (window.Autocomplete && document.getElementById('autocomplete')) {
         new Autocomplete('#autocomplete', {
             search: input => {
                 if (input.length < 2) return [];
@@ -1765,6 +1769,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-});
+}
+
+document.addEventListener('DOMContentLoaded', initCatalogApp);
+document.addEventListener('turbo:load', initCatalogApp);
 </script>
 {% endblock content %}

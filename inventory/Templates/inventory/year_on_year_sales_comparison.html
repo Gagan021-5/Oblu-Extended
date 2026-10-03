@@ -1,0 +1,2105 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Year-on-Year Sales Comparison — Oblu</title>
+
+    <!-- Panda Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Chart.js 4.4.1 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <style>
+        /* =========================================================
+           OBLU GREENISH THEME — CLEAN COMPARISON SYSTEM
+           ========================================================= */
+
+        :root {
+            --oblu-teal: #78c2ad;
+            --oblu-teal-dark: #469680;
+            --oblu-teal-deep: #2e6958;
+            --oblu-teal-soft: rgba(120, 194, 173, 0.14);
+            --oblu-emerald: #10b981;
+            --oblu-emerald-dark: #059669;
+            --oblu-emerald-soft: rgba(16, 185, 129, 0.12);
+            --oblu-slate-900: #0f172a;
+            --oblu-slate-800: #1e293b;
+            --oblu-slate-700: #334155;
+            --oblu-slate-500: #64748b;
+            --oblu-slate-400: #94a3b8;
+            --oblu-slate-200: #e2e8f0;
+            --oblu-slate-100: #f1f5f9;
+            --oblu-slate-50: #f8fafc;
+            
+            --glass-bg: #ffffff;
+            --glass-border: #e2e8f0;
+            --glass-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+            --radius-card: 16px;
+            --radius-inner: 10px;
+            --radius-pill: 9999px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: 
+                radial-gradient(1000px circle at 90% -10%, rgba(120, 194, 173, 0.15), transparent 45%),
+                radial-gradient(800px circle at 5% 40%, rgba(56, 189, 248, 0.08), transparent 40%),
+                radial-gradient(900px circle at 50% 110%, rgba(16, 185, 129, 0.05), transparent 50%),
+                #f8fafc;
+            color: var(--oblu-slate-800);
+            overflow-x: hidden;
+        }
+
+        /* Sleek Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.4);
+            border-radius: 9999px;
+        }
+
+        /* Top Clean Header */
+        .top-navbar {
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+        }
+
+        .brand-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .brand-logo-wrap {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #334155;
+        }
+
+        .brand-logo-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .brand-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--oblu-slate-900);
+            letter-spacing: -0.4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .page-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--oblu-teal-deep);
+            background: var(--oblu-teal-soft);
+            padding: 2px 7px;
+            border-radius: 4px;
+            border: 1px solid rgba(120, 194, 173, 0.35);
+        }
+
+        /* Main Container */
+        .page-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px 28px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        /* Title Area */
+        .header-title-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .page-heading {
+            font-size: 1.65rem;
+            font-weight: 800;
+            letter-spacing: -0.8px;
+            color: var(--oblu-slate-900);
+            margin: 0;
+        }
+
+        .page-heading .teal-gradient {
+            background: linear-gradient(115deg, #2e6958 0%, #469680 45%, #0284c7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-subheading {
+            font-size: 0.88rem;
+            color: var(--oblu-slate-500);
+            margin: 2px 0 0;
+        }
+
+        /* Card Panels */
+        .oblu-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-card);
+            padding: 22px 24px;
+            box-shadow: var(--glass-shadow);
+        }
+
+        .card-header-flex {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--oblu-slate-900);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.3px;
+        }
+
+        .card-subtitle {
+            font-size: 0.8rem;
+            color: var(--oblu-slate-500);
+            margin: 2px 0 0;
+        }
+
+        /* Mode Switcher Tabs */
+        .mode-tab-group {
+            display: inline-flex;
+            background: var(--oblu-slate-100);
+            padding: 3px;
+            border-radius: 12px;
+            gap: 3px;
+        }
+
+        .mode-tab-btn {
+            border: none;
+            background: transparent;
+            padding: 6px 14px;
+            border-radius: 9px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--oblu-slate-500);
+            cursor: pointer;
+            transition: all 0.18s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mode-tab-btn:hover {
+            color: var(--oblu-slate-900);
+        }
+
+        .mode-tab-btn.active {
+            background: linear-gradient(135deg, #5eae99 0%, #469680 100%);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(70, 150, 128, 0.3);
+        }
+
+        /* Brand Filter Buttons */
+        .brand-btn-group {
+            display: inline-flex;
+            background: #ffffff;
+            border: 1px solid var(--oblu-slate-200);
+            padding: 3px;
+            border-radius: 10px;
+            gap: 3px;
+            flex-wrap: wrap;
+        }
+
+        .brand-btn {
+            border: none;
+            background: transparent;
+            padding: 5px 12px;
+            border-radius: 7px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--oblu-slate-600);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .brand-btn:hover {
+            background: var(--oblu-slate-100);
+        }
+
+        .brand-btn.active {
+            background: rgba(120, 194, 173, 0.2);
+            color: var(--oblu-teal-deep);
+            font-weight: 800;
+        }
+
+        /* Form Inputs & Exact Horizontal Line Alignment */
+        .filter-label {
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--oblu-slate-500);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            height: 20px;
+            line-height: 20px;
+        }
+
+        .form-input-oblu {
+            height: 40px;
+            box-sizing: border-box;
+            background: #ffffff;
+            border: 1px solid var(--oblu-slate-200);
+            border-radius: var(--radius-inner);
+            padding: 0 12px;
+            font-size: 0.84rem;
+            color: var(--oblu-slate-800);
+            font-weight: 500;
+            width: 100%;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input-oblu:focus {
+            border-color: var(--oblu-teal);
+            box-shadow: 0 0 0 3px var(--oblu-teal-soft);
+            outline: none;
+        }
+
+        /* Date Range Cards */
+        .range-box {
+            background: var(--oblu-slate-50);
+            border: 1px solid var(--oblu-slate-200);
+            border-radius: var(--radius-inner);
+            padding: 12px 14px;
+        }
+
+        .range-box-title {
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .range-box-1 .range-box-title { color: var(--oblu-teal-deep); }
+        .range-box-2 .range-box-title { color: var(--oblu-emerald-dark); }
+
+        /* Product Search & Selection Box (Closed by Default) */
+        .product-search-container {
+            position: relative;
+        }
+
+        .search-bar-wrap {
+            height: 40px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            background: #ffffff;
+            border: 1px solid var(--oblu-slate-200);
+            border-radius: var(--radius-inner);
+            gap: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-bar-wrap:focus-within,
+        .search-bar-wrap.open {
+            border-color: var(--oblu-teal);
+            box-shadow: 0 0 0 3px var(--oblu-teal-soft);
+        }
+
+        .search-bar-input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 0.86rem;
+            color: var(--oblu-slate-800);
+            background: transparent;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        .chevron-icon {
+            font-size: 0.75rem;
+            color: var(--oblu-slate-400);
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+
+        .search-bar-wrap.open .chevron-icon {
+            transform: rotate(180deg);
+            color: var(--oblu-teal-deep);
+        }
+
+        /* Floating Dropdown - Hidden / Closed by default */
+        .product-list-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            right: 0;
+            z-index: 1050;
+            background: #ffffff;
+            border: 1px solid var(--oblu-slate-200);
+            border-radius: var(--radius-inner);
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+            max-height: 240px;
+            overflow-y: auto;
+            padding: 5px 0;
+        }
+
+        .product-list-dropdown.show {
+            display: block;
+            animation: dropdownFadeIn 0.15s ease-out;
+        }
+
+        @keyframes dropdownFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .product-item-row {
+            display: flex;
+            align-items: center;
+            padding: 7px 14px;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.15s;
+            user-select: none;
+            margin: 0;
+        }
+
+        .product-item-row:hover {
+            background: #f0fdf9;
+        }
+
+        .product-item-checkbox {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--oblu-teal-dark);
+            cursor: pointer;
+        }
+
+        .product-name-text {
+            font-size: 0.84rem;
+            color: var(--oblu-slate-800);
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .brand-badge {
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+        .badge-erkodent, .badge-thermoforming-sheets { background: #e0f2fe; color: #0369a1; }
+        .badge-bay, .badge-all-products { background: #fef3c7; color: #b45309; }
+        .badge-coherz, .badge-3d-printers { background: #f5f3ff; color: #7e22ce; }
+        .badge-resins { background: #fee2e2; color: #b91c1c; }
+        .badge-filaments-others { background: #fef9c3; color: #854d0e; }
+        .badge-spare-parts-accessories { background: #f1f5f9; color: #475569; }
+
+        /* Chart Controls Toggle Buttons */
+        .chart-toggle-group {
+            display: inline-flex;
+            background: #f1f5f9;
+            border-radius: 20px;
+            padding: 2px;
+            border: 1px solid var(--oblu-slate-200);
+        }
+
+        .chart-toggle-btn {
+            border: none;
+            background: transparent;
+            font-size: 0.73rem;
+            font-weight: 600;
+            color: #64748b;
+            padding: 3px 10px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .chart-toggle-btn:hover {
+            color: var(--oblu-teal-deep);
+        }
+
+        .chart-toggle-btn.active {
+            background: #ffffff;
+            color: var(--oblu-teal-deep);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+            font-weight: 700;
+        }
+
+        /* Selected Chips Tray */
+        .selected-tray {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+            max-height: 56px;
+            overflow-y: auto;
+        }
+
+        .item-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(120, 194, 173, 0.16);
+            color: var(--oblu-teal-deep);
+            border: 1px solid rgba(120, 194, 173, 0.4);
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 0.74rem;
+            font-weight: 600;
+        }
+
+        .chip-del {
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--oblu-teal-dark);
+        }
+        .chip-del:hover {
+            color: #e11d48;
+        }
+
+        /* Compare Action Button */
+        .btn-compare-action {
+            background: linear-gradient(135deg, #5eae99 0%, #469680 100%);
+            color: #ffffff;
+            border: 1px solid #3c826e;
+            border-radius: var(--radius-inner);
+            height: 40px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 3px 12px rgba(70, 150, 128, 0.28);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-compare-action:hover {
+            background: linear-gradient(135deg, #469680 0%, #357261 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 16px rgba(70, 150, 128, 0.38);
+        }
+
+        /* Year Badges */
+        .tag-year-2025 {
+            background: rgba(70, 150, 128, 0.15);
+            color: var(--oblu-teal-deep);
+            border: 1px solid rgba(70, 150, 128, 0.35);
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 3px 9px;
+            border-radius: 6px;
+        }
+
+        .tag-year-2026 {
+            background: rgba(2, 132, 199, 0.12);
+            color: #0284c7;
+            border: 1px solid rgba(2, 132, 199, 0.35);
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 3px 9px;
+            border-radius: 6px;
+        }
+
+        /* Day-wise Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .comparison-table th {
+            background: #f8fafc;
+            color: var(--oblu-teal-deep);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--oblu-slate-200);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .comparison-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--oblu-slate-100);
+            font-size: 0.84rem;
+            color: var(--oblu-slate-800);
+            background: #ffffff;
+        }
+
+        .comparison-table tbody tr:hover td {
+            background: #f0fdf9;
+        }
+
+        .diff-tag {
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+        .diff-up { background: #dcfce7; color: #15803d; }
+        .diff-down { background: #fee2e2; color: #b91c1c; }
+        .diff-same { background: #f1f5f9; color: #64748b; }
+
+        /* ======================================================
+           RESPONSIVE UTILITIES & MEDIA QUERIES (All Devices)
+        ======================================================= */
+        .chart-canvas-wrapper {
+            position: relative;
+            width: 100%;
+            height: 380px;
+        }
+
+        .table-responsive-container {
+            max-height: 480px;
+            overflow-y: auto;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid var(--oblu-slate-200);
+            border-radius: var(--radius-inner);
+        }
+
+        /* Large Tablets & Small Laptops (769px to 1024px) */
+        @media (max-width: 1024px) {
+            .page-container {
+                padding: 18px 18px 50px;
+                gap: 18px;
+            }
+            .chart-canvas-wrapper {
+                height: 320px;
+            }
+        }
+
+        /* Tablets & Mobile Devices (< 768px) */
+        @media (max-width: 768px) {
+            .top-navbar {
+                padding: 10px 14px;
+            }
+            .brand-title span:first-child {
+                font-size: 1.15rem;
+            }
+            .brand-title .page-badge {
+                font-size: 0.65rem;
+                padding: 2px 5px;
+            }
+            .page-container {
+                padding: 12px 10px 40px;
+                gap: 14px;
+            }
+            .page-heading {
+                font-size: 1.25rem;
+                letter-spacing: -0.4px;
+            }
+            .page-subheading {
+                font-size: 0.78rem;
+            }
+            .oblu-card {
+                padding: 14px 12px;
+                border-radius: 12px;
+            }
+            .card-title {
+                font-size: 0.92rem;
+            }
+            .card-subtitle {
+                font-size: 0.73rem;
+            }
+            .card-header-flex {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+            .chart-header-actions {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 6px !important;
+            }
+            .chart-toggle-group {
+                padding: 2px;
+            }
+            .chart-toggle-btn {
+                font-size: 0.68rem;
+                padding: 2px 7px;
+            }
+            .tag-year-2025,
+            .tag-year-2026,
+            .diff-tag {
+                font-size: 0.70rem !important;
+                padding: 2px 6px !important;
+            }
+            .chart-canvas-wrapper {
+                height: 270px;
+            }
+            /* Filter controls responsive */
+            .mode-tab-group {
+                width: 100%;
+            }
+            .mode-tab-btn {
+                flex: 1;
+                justify-content: center;
+                font-size: 0.72rem;
+                padding: 5px 6px;
+            }
+            .brand-btn-group {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                max-width: 100%;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding: 3px 4px;
+            }
+            .brand-btn-group::-webkit-scrollbar {
+                display: none;
+            }
+            .brand-btn {
+                white-space: nowrap;
+                font-size: 0.72rem;
+                padding: 4px 9px;
+            }
+            .search-bar-wrap {
+                height: 38px;
+                padding: 0 10px;
+            }
+            .search-bar-input {
+                font-size: 0.78rem;
+            }
+            .product-list-dropdown {
+                max-height: 200px;
+            }
+            .product-item-row {
+                padding: 6px 10px;
+                gap: 8px;
+            }
+            .product-name-text {
+                font-size: 0.78rem;
+            }
+            /* Table responsive */
+            .comparison-table th,
+            .comparison-table td {
+                padding: 7px 10px;
+                font-size: 0.76rem;
+                white-space: nowrap;
+            }
+            .comparison-table th {
+                font-size: 0.68rem;
+            }
+        }
+
+        /* Small Phones (< 480px) */
+        @media (max-width: 480px) {
+            .chart-canvas-wrapper {
+                height: 235px;
+            }
+            .page-heading {
+                font-size: 1.12rem;
+            }
+            .form-input-oblu {
+                height: 36px;
+                font-size: 0.78rem;
+                padding: 0 8px;
+            }
+            .date-range-input {
+                font-size: 0.74rem !important;
+                padding: 0 6px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Minimal Header (No Sidebar) -->
+    <header class="top-navbar">
+        <div class="brand-link">
+            <div class="brand-logo-wrap">
+                <img src="https://oblu-static-media.s3.ap-south-1.amazonaws.com/vactor_panda_logo_aa.png" alt="OBLU">
+            </div>
+            <div class="brand-title">
+                <span>OBLU</span>
+                <span class="page-badge">Sales Comparison</span>
+            </div>
+        </div>
+
+        <div>
+            <a href="/inventory/dashboard/" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1.5" style="border-radius: var(--radius-pill); font-size: 0.76rem; font-weight: 600; padding: 4px 12px; background: #ffffff;">
+                <i class="bi bi-grid-fill text-teal-dark"></i>
+                <span>Inventory Dashboard</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="page-container">
+
+        <!-- Title & Subtitle -->
+        <div class="header-title-row">
+            <div>
+                <h1 class="page-heading">
+                    <span class="teal-gradient">Year-on-Year Day-Wise Sales</span>
+                </h1>
+                <p class="page-subheading">
+                    Comparing selected sheet products across 2025 and 2026 on a day-by-day basis
+                </p>
+            </div>
+            <div class="text-end">
+                <span class="badge" style="background: rgba(120, 194, 173, 0.16); color: #2e6958; border: 1px solid rgba(120, 194, 173, 0.35); font-size: 0.78rem; padding: 6px 12px; border-radius: var(--radius-pill); font-weight: 600;">
+                    <i class="bi bi-check2-circle text-teal-dark me-1"></i> Active Sheet Data
+                </span>
+            </div>
+        </div>
+
+        <!-- ======================================================
+             FILTER & SELECTION SECTION
+        ======================================================= -->
+        <div class="oblu-card">
+            <form method="GET" id="filterForm">
+                <input type="hidden" name="comparison_type" id="comparisonType" value="{{ comparison_type }}">
+                <input type="hidden" name="group" id="groupInput" value="{{ selected_group }}">
+
+                <!-- Hidden inputs for multi-product selection -->
+                <div id="hiddenProductsContainer">
+                    {% for pid in selected_product_ids %}
+                        <input type="hidden" name="products" value="{{ pid }}">
+                    {% endfor %}
+                </div>
+
+                <!-- Top Row: Mode Switcher & Brands -->
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 pb-3 mb-3 border-bottom">
+                    <!-- Comparison Mode Tabs -->
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="filter-label mb-0">Mode:</span>
+                        <div class="mode-tab-group">
+                            <button type="button" class="mode-tab-btn {% if comparison_type == 'month' %}active{% endif %}" id="tabModeMonth">
+                                <i class="bi bi-calendar-event"></i> Single Month (Day-wise)
+                            </button>
+                            <button type="button" class="mode-tab-btn {% if comparison_type == 'range' %}active{% endif %}" id="tabModeRange">
+                                <i class="bi bi-calendar3-range"></i> Two Date Ranges
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Category Switcher -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="filter-label mb-0">Category:</span>
+                        <div class="brand-btn-group" id="brandBtnGroup">
+                            {% for group_name in product_groups.keys %}
+                                <button type="button" class="brand-btn {% if selected_group == group_name or not selected_group and group_name == 'All Products' %}active{% endif %}" data-brand="{{ group_name }}">
+                                    {{ group_name }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Filter Grid (Horizontally Aligned on Exact Same X-Axis Line) -->
+                <div class="row g-3 align-items-start">
+
+                    <!-- A. Single Month Picker -->
+                    <div class="col-12 col-md-4" id="monthPickerCol" {% if comparison_type == 'range' %}style="display: none;"{% endif %}>
+                        <label class="filter-label" for="monthSelect">
+                            <i class="bi bi-calendar-month text-teal-dark me-1"></i> Select Month
+                        </label>
+                        <select
+                            class="form-input-oblu"
+                            id="monthSelect"
+                            name="month"
+                        >
+                            {% for num, mname in month_options %}
+                                <option value="{{ num }}" {% if month_num == num %}selected{% endif %}>
+                                    {{ mname }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="text-muted small mt-1" style="font-size: 0.72rem; line-height: 1.3;">
+                            Day 1 to 31 compared for 2025 vs 2026
+                        </div>
+                    </div>
+
+                    <!-- B. Dual Date Ranges (Two Sections: From/To & From/To) -->
+                    <div class="col-12 col-md-6" id="dualRangesCol" {% if comparison_type != 'range' %}style="display: none;"{% endif %}>
+                        <div class="row g-2">
+                            <!-- Section 1: Period 1 (e.g. 2025) -->
+                            <div class="col-12 col-sm-6">
+                                <label class="filter-label text-truncate" title="Date Range 1 (e.g. 2025)">
+                                    <i class="bi bi-calendar-check text-teal-dark me-1"></i> Range 1 (From / To)
+                                </label>
+                                <div class="d-flex gap-1">
+                                    <input type="date" class="form-input-oblu date-range-input flex-fill" name="p1_from" value="{{ p1_from }}" title="From Date">
+                                    <input type="date" class="form-input-oblu date-range-input flex-fill" name="p1_to" value="{{ p1_to }}" title="To Date">
+                                </div>
+                            </div>
+                            <!-- Section 2: Period 2 (e.g. 2026) -->
+                            <div class="col-12 col-sm-6">
+                                <label class="filter-label text-truncate" title="Date Range 2 (e.g. 2026)">
+                                    <i class="bi bi-calendar2-range me-1" style="color: #0284c7;"></i> Range 2 (From / To)
+                                </label>
+                                <div class="d-flex gap-1">
+                                    <input type="date" class="form-input-oblu date-range-input flex-fill" name="p2_from" value="{{ p2_from }}" title="From Date">
+                                    <input type="date" class="form-input-oblu date-range-input flex-fill" name="p2_to" value="{{ p2_to }}" title="To Date">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- C. Product Search Bar & Multi-Select -->
+                    <div class="col-12 {% if comparison_type == 'range' %}col-md-6{% else %}col-md-8{% endif %}" id="productSelectCol">
+                        <div class="d-flex justify-content-between align-items-center" style="height: 20px; margin-bottom: 6px;">
+                            <label class="filter-label mb-0">
+                                <i class="bi bi-search text-teal-dark me-1"></i> Products Search & Compare (All Products)
+                            </label>
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-link p-0 text-teal-dark text-decoration-none" id="btnSelectAll" style="font-size: 0.72rem; font-weight: 700;">Select All</button>
+                                <span class="text-muted" style="font-size: 0.72rem;">|</span>
+                                <button type="button" class="btn btn-link p-0 text-muted text-decoration-none" id="btnClearAll" style="font-size: 0.72rem; font-weight: 700;">Clear</button>
+                            </div>
+                        </div>
+
+                        <div class="product-search-container" id="productSearchContainer">
+                            <!-- Search Bar Input (Click to open dropdown) -->
+                            <div class="search-bar-wrap" id="searchBarWrap">
+                                <i class="bi bi-search text-muted" style="font-size: 0.8rem;"></i>
+                                <input
+                                    type="text"
+                                    class="search-bar-input"
+                                    id="productSearchInput"
+                                    placeholder="Search thermoforming, resins, 3D printers, spares, filaments..."
+                                    autocomplete="off"
+                                >
+                                <span class="text-muted small" id="matchCounter" style="font-size: 0.72rem; white-space: nowrap;">
+                                    {{ all_search_items|length }} products
+                                </span>
+                                <i class="bi bi-chevron-down chevron-icon" id="searchChevron"></i>
+                            </div>
+
+                            <!-- Floating Dropdown (Closed by default) -->
+                            <div class="product-list-dropdown" id="productListDropdown">
+                                {% for item in all_search_items %}
+                                    <label class="product-item-row" data-id="{{ item.id }}" data-name="{{ item.name }}" data-brand="{{ item.group }}" data-category="{{ item.category }}">
+                                        <input
+                                             type="checkbox"
+                                             class="product-item-checkbox"
+                                             value="{{ item.id }}"
+                                             data-id="{{ item.id }}"
+                                             data-name="{{ item.name }}"
+                                             data-brand="{{ item.group }}"
+                                             {% if item.is_selected %}checked{% endif %}
+                                        >
+                                        <span class="product-name-text" title="{{ item.name }}">{{ item.name }}</span>
+                                        <span class="brand-badge badge-{{ item.group|slugify }}">
+                                            {{ item.group }}
+                                        </span>
+                                    </label>
+                                {% endfor %}
+                                <div class="p-2 border-top bg-light d-flex justify-content-between align-items-center">
+                                    <span class="text-muted small" style="font-size: 0.72rem;">Close to update</span>
+                                    <button type="button" class="btn btn-sm btn-primary" id="btnApplyProducts" style="font-size: 0.76rem; border-radius: var(--radius-inner); padding: 4px 14px; background: #469680; border: none;">Apply</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Selected Chips Tray -->
+                        <div class="selected-tray" id="selectedChipsTray"></div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger mb-0" style="border-radius: var(--radius-inner);">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        {% if comparison_data %}
+
+        <!-- Active Selection Summary Banner -->
+        <div class="d-flex justify-content-between align-items-sm-center flex-column flex-sm-row flex-wrap gap-2 px-1">
+            <div>
+                <span class="fw-bold" style="color: var(--oblu-slate-900); font-size: 0.95rem;">
+                    {{ selected_label }}
+                </span>
+                <span class="text-muted small ms-sm-2 d-block d-sm-inline">
+                    {% if comparison_type == 'month' %}
+                        {% if using_august_2026 %}
+                            Comparing {{ month_name }} 2025 vs August 2026 (Current Active Data)
+                        {% else %}
+                            Comparing {{ month_name }} 2025 vs {{ month_name }} 2026 (Day 1 – 31)
+                        {% endif %}
+                    {% else %}
+                        Period 1 ({{ p1_label }}) vs Period 2 ({{ p2_label }})
+                    {% endif %}
+                </span>
+            </div>
+            <div class="d-flex align-items-center flex-wrap gap-2 gap-sm-3">
+                <div class="px-2 py-1 bg-white rounded border" style="font-size: 0.78rem;">
+                    <span class="text-muted">{% if comparison_type == 'month' %}2025 Total:{% else %}Range 1 Total:{% endif %}</span>
+                    <strong style="color: var(--oblu-teal-dark);">{{ total_2025|floatformat:2 }}</strong>
+                </div>
+                <div class="px-2 py-1 bg-white rounded border" style="font-size: 0.78rem;">
+                    <span class="text-muted">
+                        {% if comparison_type == 'month' %}
+                            {% if using_august_2026 %}Aug 2026 Total:{% else %}2026 Total:{% endif %}
+                        {% else %}
+                            Range 2 Total:
+                        {% endif %}
+                    </span>
+                    <strong style="color: #0284c7;">{{ total_2026|floatformat:2 }}</strong>
+                </div>
+                <div class="px-2 py-1 bg-white rounded border" style="font-size: 0.78rem;">
+                    <span class="text-muted">Variance:</span>
+                    <strong class="{% if difference > 0 %}text-success{% elif difference < 0 %}text-danger{% else %}text-muted{% endif %}">
+                        {% if difference > 0 %}+{% endif %}{{ difference|floatformat:2 }}
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        {% if using_august_2026 %}
+        <div class="alert alert-info d-flex align-items-center gap-2 mb-0 py-2 px-3" style="border-radius: var(--radius-inner); font-size: 0.82rem; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;">
+            <i class="bi bi-info-circle-fill fs-6 text-success"></i>
+            <div>
+                <strong>Active Comparison Baseline:</strong> For {{ month_name }} 2026, transactions are currently in progress. Displaying <strong>August 2026 active data ({{ total_2026|floatformat:0 }} units)</strong> on the right for 2026 comparison. When you select any earlier month (August, July, June, etc.) or switch date ranges, real-time comparison for that period is displayed immediately.
+            </div>
+        </div>
+        {% elif comparison_type == 'month' and total_2026 == 0 %}
+        <div class="alert alert-warning d-flex align-items-center gap-2 mb-0 py-2 px-3" style="border-radius: var(--radius-inner); font-size: 0.82rem; background: #fffbeb; border: 1px solid #fde68a; color: #92400e;">
+            <i class="bi bi-info-circle-fill fs-6 text-warning"></i>
+            <div>
+                <strong>Notice:</strong> Database records for 2026 currently conclude on <strong>August 25, 2026</strong>. There are no transactions logged for {{ month_name }} 2026 yet. For full comparative data across both years, select <strong>April, May, June, July, or August</strong>.
+            </div>
+        </div>
+        {% endif %}
+
+        {% if comparison_type == 'range' %}
+        <!-- ======================================================
+             TWO DISTINCT GRAPHS: RANGE 1 GRAPH vs RANGE 2 GRAPH
+             (Shown directly when in Two Date Ranges mode)
+        ======================================================= -->
+        <div class="row g-4">
+            <!-- Range 1 Daily Sales Graph -->
+            <div class="col-12 col-xl-6">
+                <div class="oblu-card h-100">
+                    <div class="card-header-flex">
+                        <div>
+                            <h3 class="card-title">
+                                <span class="tag-year-2025">Date Range 1 Graph</span>
+                                <span>Range 1 Day-Wise Sales</span>
+                            </h3>
+                            <p class="card-subtitle">
+                                Day-by-day sales progression across Period 1 for selected product(s)
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <span class="fs-5 fw-bold" style="color: var(--oblu-teal-dark);">{{ total_2025|floatformat:2 }}</span>
+                            <div class="text-muted small" style="font-size: 0.72rem;">Total Units Sold</div>
+                        </div>
+                    </div>
+
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="chart2025"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Range 2 Daily Sales Graph -->
+            <div class="col-12 col-xl-6">
+                <div class="oblu-card h-100">
+                    <div class="card-header-flex">
+                        <div>
+                            <h3 class="card-title">
+                                <span class="tag-year-2026">Date Range 2 Graph</span>
+                                <span>Range 2 Day-Wise Sales</span>
+                            </h3>
+                            <p class="card-subtitle">
+                                Day-by-day sales progression across Period 2 for selected product(s)
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <span class="fs-5 fw-bold" style="color: #0284c7;">{{ total_2026|floatformat:2 }}</span>
+                            <div class="text-muted small" style="font-size: 0.72rem;">Total Units Sold</div>
+                        </div>
+                    </div>
+
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="chart2026"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if comparison_type == 'month' %}
+        <!-- ======================================================
+             1. DAY-TO-DAY SALES VOLUME GRAPH (with Toggles)
+        ======================================================= -->
+        <div class="oblu-card">
+            <div class="card-header-flex flex-wrap gap-2">
+                <div>
+                    <h3 class="card-title">
+                        <i class="bi bi-graph-up-arrow text-teal-dark"></i>
+                        <span id="salesChartTitle">{{ month_name }} Day-to-Day Sales Volume (2025 vs 2026)</span>
+                    </h3>
+                    <p class="card-subtitle" id="salesChartSubtitle">
+                        Units sold progression across 2025 (Greenish) vs 2026 (Bluish)
+                    </p>
+                </div>
+                <div class="chart-header-actions d-flex align-items-center flex-wrap gap-2">
+                    <!-- Granularity Toggle: Day-wise vs Month-wise -->
+                    <div class="chart-toggle-group">
+                        <button type="button" class="chart-toggle-btn active" id="btnSalesDay" onclick="setChartGranularity('sales', 'day')">
+                            <i class="bi bi-calendar3"></i> Day-wise
+                        </button>
+                        <button type="button" class="chart-toggle-btn" id="btnSalesMonth" onclick="setChartGranularity('sales', 'month')">
+                            <i class="bi bi-calendar-range"></i> Month-wise
+                        </button>
+                    </div>
+
+                    <!-- Chart Type Toggle: Line vs Bar -->
+                    <div class="chart-toggle-group">
+                        <button type="button" class="chart-toggle-btn active" id="btnSalesLine" onclick="setChartType('sales', 'line')">
+                            <i class="bi bi-graph-up"></i> Line
+                        </button>
+                        <button type="button" class="chart-toggle-btn" id="btnSalesBar" onclick="setChartType('sales', 'bar')">
+                            <i class="bi bi-bar-chart-fill"></i> Bar
+                        </button>
+                    </div>
+
+                    <span class="tag-year-2025">
+                        <i class="bi bi-circle-fill me-1" style="font-size: 7px;"></i> 2025: {{ total_2025|floatformat:2 }}
+                    </span>
+                    <span class="tag-year-2026">
+                        <i class="bi bi-circle-fill me-1" style="font-size: 7px;"></i> 2026: {{ total_2026|floatformat:2 }}
+                    </span>
+                    <span class="diff-tag {% if difference > 0 %}diff-up{% elif difference < 0 %}diff-down{% else %}diff-same{% endif %}" style="font-size: 0.78rem; padding: 4px 8px;">
+                        Variance: {% if difference > 0 %}+{% endif %}{{ difference|floatformat:2 }}
+                        {% if growth_percent is not None %}({% if growth_percent > 0 %}+{% endif %}{{ growth_percent|floatformat:1 }}%){% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="chart-canvas-wrapper">
+                <canvas id="chartCombined"></canvas>
+            </div>
+        </div>
+
+        <!-- ======================================================
+             2. SALES PRICE & REVENUE GRAPH (with Toggles)
+        ======================================================= -->
+        <div class="oblu-card mt-4">
+            <div class="card-header-flex flex-wrap gap-2">
+                <div>
+                    <h3 class="card-title">
+                        <i class="bi bi-currency-rupee text-teal-dark"></i>
+                        <span id="priceChartTitle">{{ month_name }} Sales Revenue & Price Comparison (2025 vs 2026)</span>
+                    </h3>
+                    <p class="card-subtitle" id="priceChartSubtitle">
+                        Total billing amount (₹) and price comparison across 2025 (Greenish) vs 2026 (Bluish)
+                    </p>
+                </div>
+                <div class="chart-header-actions d-flex align-items-center flex-wrap gap-2">
+                    <!-- Granularity Toggle: Day-wise vs Month-wise -->
+                    <div class="chart-toggle-group">
+                        <button type="button" class="chart-toggle-btn active" id="btnPriceDay" onclick="setChartGranularity('price', 'day')">
+                            <i class="bi bi-calendar3"></i> Day-wise
+                        </button>
+                        <button type="button" class="chart-toggle-btn" id="btnPriceMonth" onclick="setChartGranularity('price', 'month')">
+                            <i class="bi bi-calendar-range"></i> Month-wise
+                        </button>
+                    </div>
+
+                    <!-- Chart Type Toggle: Line vs Bar -->
+                    <div class="chart-toggle-group">
+                        <button type="button" class="chart-toggle-btn active" id="btnPriceLine" onclick="setChartType('price', 'line')">
+                            <i class="bi bi-graph-up"></i> Line
+                        </button>
+                        <button type="button" class="chart-toggle-btn" id="btnPriceBar" onclick="setChartType('price', 'bar')">
+                            <i class="bi bi-bar-chart-fill"></i> Bar
+                        </button>
+                    </div>
+
+                    <span class="tag-year-2025">
+                        <i class="bi bi-circle-fill me-1" style="font-size: 7px;"></i> 2025: ₹{{ total_amount_2025|floatformat:0 }}
+                    </span>
+                    <span class="tag-year-2026">
+                        <i class="bi bi-circle-fill me-1" style="font-size: 7px;"></i> 2026: ₹{{ total_amount_2026|floatformat:0 }}
+                    </span>
+                    <span class="diff-tag {% if amount_difference > 0 %}diff-up{% elif amount_difference < 0 %}diff-down{% else %}diff-same{% endif %}" style="font-size: 0.78rem; padding: 4px 8px;">
+                        Variance: {% if amount_difference > 0 %}+{% endif %}₹{{ amount_difference|floatformat:0 }}
+                        {% if amount_growth_percent is not None %}({% if amount_growth_percent > 0 %}+{% endif %}{{ amount_growth_percent|floatformat:1 }}%){% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="chart-canvas-wrapper">
+                <canvas id="chartSalesPrice"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ======================================================
+             DAY-WISE COMPARISON TABLE (with Monthly Average)
+        ======================================================= -->
+        <div class="oblu-card mt-4">
+            <div class="card-header-flex">
+                <div>
+                    <h3 class="card-title">
+                        <i class="bi bi-table text-teal-dark"></i> Day-Wise Sales Breakdown
+                    </h3>
+                    <p class="card-subtitle">Individual daily values, variance, and rate of change</p>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="exportBtn" style="font-size: 0.76rem; border-radius: var(--radius-pill); padding: 4px 12px;">
+                    <i class="bi bi-download me-1"></i> Export CSV
+                </button>
+            </div>
+
+            <div class="table-responsive-container">
+                <table class="comparison-table" id="dataTable">
+                    <thead>
+                        <tr>
+                            {% if comparison_type == "month" %}
+                                <th>Day</th>
+                                <th class="text-end">2025 Sales</th>
+                                <th class="text-end">2026 Sales</th>
+                            {% else %}
+                                <th>Interval / Dates</th>
+                                <th class="text-end">Range 1 Sales</th>
+                                <th class="text-end">Range 2 Sales</th>
+                            {% endif %}
+                            <th class="text-end">Difference</th>
+                            <th class="text-end">
+                                Growth / Decline
+                                <span class="d-block text-muted text-transform-none" style="font-size: 0.68rem; font-weight: 600;">
+                                    (Month Avg: {% if avg_month_growth is not None %}{% if avg_month_growth > 0 %}+{% endif %}{{ avg_month_growth|floatformat:1 }}%{% else %}N/A{% endif %})
+                                </span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in comparison_data %}
+                        <tr>
+                            <td>
+                                <strong>{{ row.label }}</strong>
+                                {% if row.sublabel %}
+                                    <div class="text-muted" style="font-size: 0.72rem;">{{ row.sublabel }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="text-end fw-semibold">{{ row.year_2025|floatformat:2 }}</td>
+                            <td class="text-end fw-semibold" style="color: var(--oblu-emerald-dark);">{{ row.year_2026|floatformat:2 }}</td>
+                            <td class="text-end fw-bold {% if row.difference > 0 %}text-success{% elif row.difference < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                {% if row.difference > 0 %}+{% endif %}{{ row.difference|floatformat:2 }}
+                            </td>
+                            <td class="text-end">
+                                {% if row.growth_percent is not None %}
+                                    {% if row.growth_percent > 0 %}
+                                        <span class="diff-tag diff-up">↑ +{{ row.growth_percent|floatformat:2 }}%</span>
+                                    {% elif row.growth_percent < 0 %}
+                                        <span class="diff-tag diff-down">↓ {{ row.growth_percent|floatformat:2 }}%</span>
+                                    {% else %}
+                                        <span class="diff-tag diff-same">0.00%</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="diff-tag diff-same text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr style="background: #f8fafc; font-weight: 700; border-top: 2px solid var(--oblu-slate-300);">
+                            <td>
+                                <strong>Month Total & Average</strong>
+                                <div class="text-muted" style="font-size: 0.72rem;">Full Month Aggregate</div>
+                            </td>
+                            <td class="text-end fw-bold">{{ total_2025|floatformat:2 }}</td>
+                            <td class="text-end fw-bold" style="color: #0284c7;">{{ total_2026|floatformat:2 }}</td>
+                            <td class="text-end fw-bold {% if difference > 0 %}text-success{% elif difference < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                {% if difference > 0 %}+{% endif %}{{ difference|floatformat:2 }}
+                            </td>
+                            <td class="text-end">
+                                {% if avg_month_growth is not None %}
+                                    {% if avg_month_growth > 0 %}
+                                        <span class="diff-tag diff-up" style="font-size: 0.82rem; padding: 4px 8px;">
+                                            Avg: ↑ +{{ avg_month_growth|floatformat:2 }}%
+                                        </span>
+                                    {% elif avg_month_growth < 0 %}
+                                        <span class="diff-tag diff-down" style="font-size: 0.82rem; padding: 4px 8px;">
+                                            Avg: ↓ {{ avg_month_growth|floatformat:2 }}%
+                                        </span>
+                                    {% else %}
+                                        <span class="diff-tag diff-same" style="font-size: 0.82rem; padding: 4px 8px;">Avg: 0.00%</span>
+                                    {% endif %}
+                                    {% if growth_percent is not None %}
+                                        <div class="text-muted mt-1" style="font-size: 0.70rem; font-weight: 500;">
+                                            Net: {% if growth_percent > 0 %}+{% endif %}{{ growth_percent|floatformat:2 }}%
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="diff-tag diff-same text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        {% elif not error %}
+        <div class="oblu-card text-center py-5 text-muted">
+            <i class="bi bi-inbox fs-2 mb-2 d-block text-muted"></i>
+            <h6 class="fw-bold text-dark">No Sales Data Found</h6>
+            <p class="mb-0 text-muted" style="font-size: 0.86rem;">
+                No tax invoice transactions matched the selected products and date settings.
+            </p>
+        </div>
+        {% endif %}
+
+    </main>
+
+    <!-- Raw Comparison JSON Data -->
+    {{ comparison_data_json|json_script:"comparison-data" }}
+    {{ monthly_comparison_data_json|json_script:"monthly-comparison-data" }}
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const comparisonTypeInput = document.getElementById("comparisonType");
+        const groupInput = document.getElementById("groupInput");
+        const hiddenContainer = document.getElementById("hiddenProductsContainer");
+        const selectedChipsTray = document.getElementById("selectedChipsTray");
+
+        const tabModeMonth = document.getElementById("tabModeMonth");
+        const tabModeRange = document.getElementById("tabModeRange");
+        const monthPickerCol = document.getElementById("monthPickerCol");
+        const dualRangesCol = document.getElementById("dualRangesCol");
+
+        const brandButtons = document.querySelectorAll(".brand-btn");
+        const productSearchInput = document.getElementById("productSearchInput");
+        const productRows = Array.from(document.querySelectorAll(".product-item-row"));
+        const checkboxes = Array.from(document.querySelectorAll(".product-item-checkbox"));
+        const btnSelectAll = document.getElementById("btnSelectAll");
+        const btnClearAll = document.getElementById("btnClearAll");
+        const matchCounter = document.getElementById("matchCounter");
+
+        /* ======================================================
+           1. MODE TABS & DIRECT SWITCHING (No Compare Button)
+        ====================================================== */
+        const filterForm = document.getElementById("filterForm");
+
+        const monthSelect = document.getElementById("monthSelect");
+        if (monthSelect) {
+            monthSelect.addEventListener("change", function () {
+                filterForm.submit();
+            });
+        }
+
+        // Auto-submit when date inputs change in Range mode
+        const dateInputs = document.querySelectorAll(".date-range-input");
+        dateInputs.forEach(inp => {
+            inp.addEventListener("change", function () {
+                filterForm.submit();
+            });
+        });
+
+        if (tabModeMonth && tabModeRange) {
+            tabModeMonth.addEventListener("click", function () {
+                comparisonTypeInput.value = "month";
+                filterForm.submit();
+            });
+
+            tabModeRange.addEventListener("click", function () {
+                comparisonTypeInput.value = "range";
+                filterForm.submit();
+            });
+        }
+
+        /* ======================================================
+           2. MULTI-PRODUCT SELECTION & CHIPS
+        ====================================================== */
+        function syncChips() {
+            hiddenContainer.innerHTML = "";
+            selectedChipsTray.innerHTML = "";
+
+            const checked = checkboxes.filter(cb => cb.checked);
+
+            checked.forEach(cb => {
+                const id = cb.value;
+                const name = cb.getAttribute("data-name") || ("Sheet #" + id);
+
+                // Hidden input for form submission
+                const inp = document.createElement("input");
+                inp.type = "hidden";
+                inp.name = "products";
+                inp.value = id;
+                hiddenContainer.appendChild(inp);
+
+                // Removable chip
+                const chip = document.createElement("span");
+                chip.className = "item-chip";
+                chip.innerHTML = `
+                    <span>${name}</span>
+                    <span class="chip-del" data-id="${id}" title="Remove">✕</span>
+                `;
+                selectedChipsTray.appendChild(chip);
+            });
+        }
+
+        selectedChipsTray.addEventListener("click", function (e) {
+            if (e.target.classList.contains("chip-del")) {
+                const id = e.target.getAttribute("data-id");
+                const targetCb = checkboxes.find(c => c.value === id);
+                if (targetCb) {
+                    targetCb.checked = false;
+                    syncChips();
+                }
+            }
+        });
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener("change", syncChips);
+        });
+
+        /* ======================================================
+           3. BRAND & PRODUCT SEARCH FILTERING
+        ====================================================== */
+        function filterProducts() {
+            const query = (productSearchInput.value || "").toLowerCase().trim();
+            const activeBrand = groupInput.value;
+
+            let count = 0;
+            productRows.forEach(row => {
+                const name = (row.getAttribute("data-name") || "").toLowerCase();
+                const brand = row.getAttribute("data-brand") || "";
+                const category = (row.getAttribute("data-category") || "").toLowerCase();
+
+                const matchesQuery = !query || name.includes(query) || brand.toLowerCase().includes(query) || category.includes(query);
+                const matchesBrand = !activeBrand || activeBrand === "All Products" || brand === activeBrand;
+
+                if (matchesQuery && matchesBrand) {
+                    row.style.display = "flex";
+                    count++;
+                } else {
+                    row.style.display = "none";
+                }
+            });
+
+            if (matchCounter) {
+                matchCounter.textContent = count + " products";
+            }
+        }
+
+        productSearchInput.addEventListener("input", filterProducts);
+
+        brandButtons.forEach(btn => {
+            btn.addEventListener("click", function () {
+                brandButtons.forEach(b => b.classList.remove("active"));
+                this.classList.add("active");
+
+                const brand = this.getAttribute("data-brand") || "";
+                groupInput.value = brand;
+
+                // Clear specific products and submit form directly
+                hiddenContainer.innerHTML = "";
+                filterForm.submit();
+            });
+        });
+
+        if (btnSelectAll) {
+            btnSelectAll.addEventListener("click", function () {
+                productRows.forEach(row => {
+                    if (row.style.display !== "none") {
+                        const cb = row.querySelector(".product-item-checkbox");
+                        if (cb) cb.checked = true;
+                    }
+                });
+                syncChips();
+                filterForm.submit();
+            });
+        }
+
+        if (btnClearAll) {
+            btnClearAll.addEventListener("click", function () {
+                productRows.forEach(row => {
+                    if (row.style.display !== "none") {
+                        const cb = row.querySelector(".product-item-checkbox");
+                        if (cb) cb.checked = false;
+                    }
+                });
+                syncChips();
+                filterForm.submit();
+            });
+        }
+
+        // Initial chips population
+        syncChips();
+        filterProducts();
+
+        let productsSelectionChanged = false;
+        checkboxes.forEach(cb => {
+            cb.addEventListener("change", function () {
+                productsSelectionChanged = true;
+                syncChips();
+            });
+        });
+
+        /* ======================================================
+           3b. FLOATING DROPDOWN TOGGLE (Closed by default)
+        ====================================================== */
+        const searchBarWrap = document.getElementById("searchBarWrap");
+        const productListDropdown = document.getElementById("productListDropdown");
+        const productSearchContainer = document.getElementById("productSearchContainer");
+        const searchChevron = document.getElementById("searchChevron");
+        const btnApplyProducts = document.getElementById("btnApplyProducts");
+
+        function openDropdown() {
+            if (productListDropdown) {
+                productListDropdown.classList.add("show");
+            }
+            if (searchBarWrap) {
+                searchBarWrap.classList.add("open");
+            }
+        }
+
+        function closeDropdown() {
+            if (productListDropdown) {
+                productListDropdown.classList.remove("show");
+            }
+            if (searchBarWrap) {
+                searchBarWrap.classList.remove("open");
+            }
+            if (productsSelectionChanged) {
+                productsSelectionChanged = false;
+                filterForm.submit();
+            }
+        }
+
+        if (btnApplyProducts) {
+            btnApplyProducts.addEventListener("click", function (e) {
+                e.stopPropagation();
+                closeDropdown();
+                filterForm.submit();
+            });
+        }
+
+        function toggleDropdown(e) {
+            if (e) e.stopPropagation();
+            if (productListDropdown && productListDropdown.classList.contains("show")) {
+                closeDropdown();
+            } else {
+                openDropdown();
+            }
+        }
+
+        if (searchBarWrap) {
+            searchBarWrap.addEventListener("click", function (e) {
+                openDropdown();
+            });
+        }
+
+        if (productSearchInput) {
+            productSearchInput.addEventListener("focus", function () {
+                openDropdown();
+            });
+
+            productSearchInput.addEventListener("input", function () {
+                openDropdown();
+                filterProducts();
+            });
+        }
+
+        if (searchChevron) {
+            searchChevron.addEventListener("click", function (e) {
+                toggleDropdown(e);
+            });
+        }
+
+        // Close when clicking anywhere outside of product search container
+        document.addEventListener("click", function (e) {
+            if (productSearchContainer && !productSearchContainer.contains(e.target)) {
+                closeDropdown();
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") {
+                closeDropdown();
+            }
+        });
+
+        /* ======================================================
+           4. CHARTS CONFIGURATION & TOGGLES
+           - Sales Volume Chart (Day-wise / Month-wise, Line / Bar)
+           - Sales Price & Revenue Chart (Day-wise / Month-wise, Line / Bar)
+           - Dual Date Ranges Charts (Range 1 vs Range 2)
+        ====================================================== */
+        const canvas2025 = document.getElementById("chart2025");
+        const canvas2026 = document.getElementById("chart2026");
+        const canvasCombined = document.getElementById("chartCombined");
+        const canvasPrice = document.getElementById("chartSalesPrice");
+
+        const dataEl = document.getElementById("comparison-data");
+        const monthlyDataEl = document.getElementById("monthly-comparison-data");
+        let comparisonData = [];
+        let monthlyData = [];
+
+        if (dataEl) {
+            try {
+                comparisonData = JSON.parse(dataEl.textContent);
+                if (typeof comparisonData === "string") comparisonData = JSON.parse(comparisonData);
+            } catch (e) {
+                console.error("comparisonData parse error", e);
+            }
+        }
+
+        if (monthlyDataEl) {
+            try {
+                monthlyData = JSON.parse(monthlyDataEl.textContent);
+                if (typeof monthlyData === "string") monthlyData = JSON.parse(monthlyData);
+            } catch (e) {
+                console.error("monthlyData parse error", e);
+            }
+        }
+
+        const mode = "{{ comparison_type|default:'month'|escapejs }}";
+
+        const sharedTooltip = {
+            backgroundColor: "rgba(15, 23, 42, 0.94)",
+            titleColor: "#ffffff",
+            titleFont: { size: 11, weight: "600", family: "Inter" },
+            bodyColor: "#e2e8f0",
+            bodyFont: { size: 12, weight: "700", family: "Inter" },
+            padding: 10,
+            cornerRadius: 8,
+            borderColor: "rgba(226, 232, 240, 0.2)",
+            borderWidth: 1,
+        };
+
+        const salesState = {
+            granularity: 'day', // 'day' or 'month'
+            type: 'line'        // 'line' or 'bar'
+        };
+
+        const priceState = {
+            granularity: 'day', // 'day' or 'month'
+            type: 'line'        // 'line' or 'bar'
+        };
+
+        let chartCombinedInstance = null;
+        let chartPriceInstance = null;
+
+        window.setChartGranularity = function(chartName, granularity) {
+            if (chartName === 'sales') {
+                salesState.granularity = granularity;
+                document.getElementById('btnSalesDay')?.classList.toggle('active', granularity === 'day');
+                document.getElementById('btnSalesMonth')?.classList.toggle('active', granularity === 'month');
+                const titleEl = document.getElementById('salesChartTitle');
+                if (titleEl) {
+                    titleEl.textContent = granularity === 'month'
+                        ? "Full Year Month-Wise Sales Volume (2025 vs 2026)"
+                        : "{{ month_name|escapejs }} Day-to-Day Sales Volume (2025 vs 2026)";
+                }
+                renderSalesChart();
+            } else if (chartName === 'price') {
+                priceState.granularity = granularity;
+                document.getElementById('btnPriceDay')?.classList.toggle('active', granularity === 'day');
+                document.getElementById('btnPriceMonth')?.classList.toggle('active', granularity === 'month');
+                const titleEl = document.getElementById('priceChartTitle');
+                if (titleEl) {
+                    titleEl.textContent = granularity === 'month'
+                        ? "Full Year Month-Wise Sales Revenue & Price (2025 vs 2026)"
+                        : "{{ month_name|escapejs }} Sales Revenue & Price Comparison (2025 vs 2026)";
+                }
+                renderPriceChart();
+            }
+        };
+
+        window.setChartType = function(chartName, type) {
+            if (chartName === 'sales') {
+                salesState.type = type;
+                document.getElementById('btnSalesLine')?.classList.toggle('active', type === 'line');
+                document.getElementById('btnSalesBar')?.classList.toggle('active', type === 'bar');
+                renderSalesChart();
+            } else if (chartName === 'price') {
+                priceState.type = type;
+                document.getElementById('btnPriceLine')?.classList.toggle('active', type === 'line');
+                document.getElementById('btnPriceBar')?.classList.toggle('active', type === 'bar');
+                renderPriceChart();
+            }
+        };
+
+        function renderSalesChart() {
+            if (!canvasCombined || typeof Chart === "undefined") return;
+            if (chartCombinedInstance) {
+                chartCombinedInstance.destroy();
+                chartCombinedInstance = null;
+            }
+
+            const isMonth = salesState.granularity === 'month';
+            const isBar = salesState.type === 'bar';
+            const dataset = isMonth ? monthlyData : comparisonData;
+            if (!Array.isArray(dataset) || dataset.length === 0) return;
+
+            const labels = dataset.map(r => r.label);
+            const data2025 = dataset.map(r => Number(r.year_2025) || 0);
+            const data2026 = dataset.map(r => Number(r.year_2026) || 0);
+
+            const isMobile = window.innerWidth < 768;
+            const ctx = canvasCombined.getContext("2d");
+            chartCombinedInstance = new Chart(ctx, {
+                type: isBar ? 'bar' : 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: isMonth ? "2025 Full Year Sales" : (mode === "month" ? "{{ month_name|escapejs }} 2025 Sales" : "Range 1 Sales"),
+                            data: data2025,
+                            borderColor: "#469680",
+                            backgroundColor: isBar ? "#469680" : "rgba(70, 150, 128, 0.08)",
+                            borderWidth: isBar ? 1 : 2.5,
+                            borderRadius: isBar ? 4 : 0,
+                            pointRadius: isBar ? 0 : (labels.length > 35 ? 0 : 3),
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: "#ffffff",
+                            pointBorderColor: "#469680",
+                            pointBorderWidth: 2,
+                            tension: 0.35,
+                            fill: !isBar
+                        },
+                        {
+                            label: isMonth ? "2026 Full Year Sales" : (mode === "month" ? "{% if using_august_2026 %}Aug 2026 Active Sales{% else %}{{ month_name|escapejs }} 2026 Sales{% endif %}" : "Range 2 Sales"),
+                            data: data2026,
+                            borderColor: "#0284c7",
+                            backgroundColor: isBar ? "#0284c7" : "rgba(2, 132, 199, 0.08)",
+                            borderWidth: isBar ? 1 : 2.5,
+                            borderRadius: isBar ? 4 : 0,
+                            pointRadius: isBar ? 0 : (labels.length > 35 ? 0 : 3),
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: "#ffffff",
+                            pointBorderColor: "#0284c7",
+                            pointBorderWidth: 2,
+                            tension: 0.35,
+                            fill: !isBar
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: "index", intersect: false },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: isMobile ? "bottom" : "top",
+                            align: isMobile ? "center" : "end",
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: "circle",
+                                boxWidth: isMobile ? 6 : 8,
+                                font: { family: "Inter", weight: 600, size: isMobile ? 10 : 12 },
+                                color: "#475569"
+                            }
+                        },
+                        tooltip: {
+                            ...sharedTooltip,
+                            callbacks: {
+                                afterTitle: function(ctx) {
+                                    const idx = ctx[0].dataIndex;
+                                    const item = dataset[idx];
+                                    if (isMonth) return item?.month_name || "";
+                                    return item?.sublabel || (item?.date_p1 ? "Date: " + item.date_p1 : "");
+                                },
+                                label: function(ctx) {
+                                    return " " + ctx.dataset.label + ": " + Number(ctx.raw).toLocaleString("en-IN") + " units";
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { size: isMobile ? 9 : 11, family: "Inter" },
+                                color: "#94a3b8",
+                                maxRotation: isMobile ? 45 : 0
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: "#f1f5f9" },
+                            ticks: {
+                                font: { size: isMobile ? 9 : 11, family: "Inter" },
+                                color: "#94a3b8",
+                                callback: v => Number(v).toLocaleString("en-IN")
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderPriceChart() {
+            if (!canvasPrice || typeof Chart === "undefined") return;
+            if (chartPriceInstance) {
+                chartPriceInstance.destroy();
+                chartPriceInstance = null;
+            }
+
+            const isMonth = priceState.granularity === 'month';
+            const isBar = priceState.type === 'bar';
+            const dataset = isMonth ? monthlyData : comparisonData;
+            if (!Array.isArray(dataset) || dataset.length === 0) return;
+
+            const labels = dataset.map(r => r.label);
+            const data2025 = dataset.map(r => Number(r.amount_2025) || 0);
+            const data2026 = dataset.map(r => Number(r.amount_2026) || 0);
+
+            const isMobile = window.innerWidth < 768;
+            const ctx = canvasPrice.getContext("2d");
+            chartPriceInstance = new Chart(ctx, {
+                type: isBar ? 'bar' : 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: isMonth ? "2025 Revenue (₹)" : "2025 Sales Value (₹)",
+                            data: data2025,
+                            borderColor: "#469680",
+                            backgroundColor: isBar ? "#469680" : "rgba(70, 150, 128, 0.08)",
+                            borderWidth: isBar ? 1 : 2.5,
+                            borderRadius: isBar ? 4 : 0,
+                            pointRadius: isBar ? 0 : (labels.length > 35 ? 0 : 3),
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: "#ffffff",
+                            pointBorderColor: "#469680",
+                            pointBorderWidth: 2,
+                            tension: 0.35,
+                            fill: !isBar
+                        },
+                        {
+                            label: isMonth ? "2026 Revenue (₹)" : "2026 Sales Value (₹)",
+                            data: data2026,
+                            borderColor: "#0284c7",
+                            backgroundColor: isBar ? "#0284c7" : "rgba(2, 132, 199, 0.08)",
+                            borderWidth: isBar ? 1 : 2.5,
+                            borderRadius: isBar ? 4 : 0,
+                            pointRadius: isBar ? 0 : (labels.length > 35 ? 0 : 3),
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: "#ffffff",
+                            pointBorderColor: "#0284c7",
+                            pointBorderWidth: 2,
+                            tension: 0.35,
+                            fill: !isBar
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: "index", intersect: false },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: isMobile ? "bottom" : "top",
+                            align: isMobile ? "center" : "end",
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: "circle",
+                                boxWidth: isMobile ? 6 : 8,
+                                font: { family: "Inter", weight: 600, size: isMobile ? 10 : 12 },
+                                color: "#475569"
+                            }
+                        },
+                        tooltip: {
+                            ...sharedTooltip,
+                            callbacks: {
+                                afterTitle: function(ctx) {
+                                    const idx = ctx[0].dataIndex;
+                                    const item = dataset[idx];
+                                    if (isMonth) return item?.month_name || "";
+                                    return item?.sublabel || (item?.date_p1 ? "Date: " + item.date_p1 : "");
+                                },
+                                label: function(ctx) {
+                                    const val = Number(ctx.raw) || 0;
+                                    return " " + ctx.dataset.label + ": ₹" + val.toLocaleString("en-IN");
+                                },
+                                afterLabel: function(ctx) {
+                                    const idx = ctx.dataIndex;
+                                    const item = dataset[idx];
+                                    if (!item) return "";
+                                    const unitPrice = ctx.datasetIndex === 0 ? item.price_2025 : item.price_2026;
+                                    if (unitPrice && unitPrice > 0) {
+                                        return "   Avg Unit Price: ₹" + Number(unitPrice).toLocaleString("en-IN");
+                                    }
+                                    return "";
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { size: isMobile ? 9 : 11, family: "Inter" },
+                                color: "#94a3b8",
+                                maxRotation: isMobile ? 45 : 0
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: "#f1f5f9" },
+                            ticks: {
+                                font: { size: isMobile ? 9 : 11, family: "Inter" },
+                                color: "#94a3b8",
+                                callback: v => "₹" + Number(v).toLocaleString("en-IN")
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render Combined Sales and Price Charts
+        renderSalesChart();
+        renderPriceChart();
+
+        // Dual Date Ranges Distinct Charts (if in Range mode)
+        if (canvas2025 && Array.isArray(comparisonData) && comparisonData.length > 0) {
+            const isMobile = window.innerWidth < 768;
+            const labels = comparisonData.map(r => r.label);
+            const data2025 = comparisonData.map(r => Number(r.year_2025) || 0);
+            const ctx25 = canvas2025.getContext("2d");
+            const grad25 = ctx25.createLinearGradient(0, 0, 0, 240);
+            grad25.addColorStop(0, "rgba(120, 194, 173, 0.40)");
+            grad25.addColorStop(0.7, "rgba(120, 194, 173, 0.08)");
+            grad25.addColorStop(1, "rgba(120, 194, 173, 0.00)");
+
+            new Chart(ctx25, {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Range 1 Sales",
+                        data: data2025,
+                        borderColor: "#469680",
+                        backgroundColor: grad25,
+                        borderWidth: 2.5,
+                        pointRadius: labels.length > 35 ? 0 : 3.5,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: "#ffffff",
+                        pointBorderColor: "#469680",
+                        pointBorderWidth: 2,
+                        fill: true,
+                        tension: 0.35
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: "index", intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            ...sharedTooltip,
+                            displayColors: false,
+                            callbacks: {
+                                afterTitle: function(ctx) {
+                                    const idx = ctx[0].dataIndex;
+                                    return comparisonData[idx]?.date_p1 ? ("Date: " + comparisonData[idx].date_p1) : "";
+                                },
+                                label: function(ctx) {
+                                    return " Sales: " + Number(ctx.raw).toLocaleString("en-IN") + " units";
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: isMobile ? 9 : 11, family: "Inter" }, color: "#94a3b8", maxRotation: isMobile ? 45 : 0 }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: "#f1f5f9" },
+                            ticks: {
+                                font: { size: isMobile ? 9 : 11, family: "Inter" },
+                                color: "#94a3b8",
+                                callback: v => Number(v).toLocaleString("en-IN")
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        if (canvas2026 && Array.isArray(comparisonData) && comparisonData.length > 0) {
+            const isMobile = window.innerWidth < 768;
+            const labels = comparisonData.map(r => r.label);
+            const data2026 = comparisonData.map(r => Number(r.year_2026) || 0);
+            const ctx26 = canvas2026.getContext("2d");
+            const grad26 = ctx26.createLinearGradient(0, 0, 0, 240);
+            grad26.addColorStop(0, "rgba(2, 132, 199, 0.35)");
+            grad26.addColorStop(0.7, "rgba(2, 132, 199, 0.06)");
+            grad26.addColorStop(1, "rgba(2, 132, 199, 0.00)");
+
+            new Chart(ctx26, {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Range 2 Sales",
+                        data: data2026,
+                        borderColor: "#0284c7",
+                        backgroundColor: grad26,
+                        borderWidth: 2.5,
+                        pointRadius: labels.length > 35 ? 0 : 3.5,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: "#ffffff",
+                        pointBorderColor: "#0284c7",
+                        pointBorderWidth: 2,
+                        fill: true,
+                        tension: 0.35
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: "index", intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            ...sharedTooltip,
+                            displayColors: false,
+                            callbacks: {
+                                afterTitle: function(ctx) {
+                                    const idx = ctx[0].dataIndex;
+                                    return comparisonData[idx]?.date_p2 ? ("Date: " + comparisonData[idx].date_p2) : "";
+                                },
+                                label: function(ctx) {
+                                    return " Sales: " + Number(ctx.raw).toLocaleString("en-IN") + " units";
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: isMobile ? 9 : 11, family: "Inter" }, color: "#94a3b8", maxRotation: isMobile ? 45 : 0 }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: "#f1f5f9" },
+                            ticks: {
+                                font: { size: isMobile ? 9 : 11, family: "Inter" },
+                                color: "#94a3b8",
+                                callback: v => Number(v).toLocaleString("en-IN")
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        /* ======================================================
+           5. CSV EXPORT
+        ====================================================== */
+        const exportBtn = document.getElementById("exportBtn");
+        if (exportBtn) {
+            exportBtn.addEventListener("click", function () {
+                const table = document.getElementById("dataTable");
+                if (!table) return;
+
+                let csv = [];
+                const rows = table.querySelectorAll("tr");
+                rows.forEach(row => {
+                    const cols = row.querySelectorAll("th, td");
+                    let rowData = [];
+                    cols.forEach(col => {
+                        let text = col.innerText.replace(/\n/g, " ").replace(/"/g, '""').trim();
+                        rowData.push('"' + text + '"');
+                    });
+                    csv.push(rowData.join(","));
+                });
+
+                const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "sheets_sales_comparison.csv";
+                link.click();
+            });
+        }
+
+    });
+    </script>
+</body>
+</html>

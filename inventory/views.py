@@ -3,6 +3,7 @@ from calendar import month
 from django.shortcuts import render , redirect , reverse
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, View, CreateView, UpdateView, DeleteView,ListView  # Imports TemplateView, a built-in Django view for rendering templates.
+from django.core.paginator import Paginator
 from .forms import CustomUserCreationForm , InventoryItemForm
 from django.contrib.auth import authenticate , login ,logout
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -11,8 +12,6 @@ import pandas as pd
 import re
 import json
 from django.core.serializers.json import DjangoJSONEncoder
-from sklearn.linear_model import LinearRegression
-import numpy as np
 from django.shortcuts import get_object_or_404
 import calendar
 from inventory.mixins import AccountantRequiredMixin
@@ -493,7 +492,7 @@ class Index(LoginRequiredMixin, TemplateView):
 
                 items_count = 0
                 try:
-                    items_count = po.items.count()
+                    items_count = len(po.items.all())
                 except Exception:
                     pass
 
@@ -572,24 +571,72 @@ class ProductListView(AccountantRequiredMixin, View):
         category_obj = None
         if category:
             category_obj = get_object_or_404(Category, id=category)
-            items = InventoryItem.objects.filter(category=category_obj).select_related('category').order_by('name')
+            base_items = InventoryItem.objects.filter(category=category_obj)
         else:
             category_id = request.GET.get('category')
             if category_id:
                 category_obj = Category.objects.filter(id=category_id).first()
-                items = InventoryItem.objects.filter(category=category_obj).select_related('category').order_by('name')
+                base_items = InventoryItem.objects.filter(category=category_obj) if category_obj else InventoryItem.objects.all()
             else:
-                items = InventoryItem.objects.all().select_related('category').order_by('name')
+                base_items = InventoryItem.objects.all()
 
         all_categories = Category.objects.annotate(item_count=Count('inventoryitem')).order_by('-item_count')
-        total_items = items.count()
-        total_quantity = items.aggregate(total=Sum('quantity'))['total'] or 0
-        low_stock_count = items.filter(quantity__lte=F('min_quantity'), min_quantity__gt=0).count()
-        out_of_stock_count = items.filter(Q(quantity__lte=0) | Q(quantity__isnull=True)).count()
+        
+        # Scope KPIs based on category scope
+        total_items = base_items.count()
+        total_quantity = base_items.aggregate(total=Sum('quantity'))['total'] or 0
+        low_stock_count = base_items.filter(quantity__lte=F('min_quantity'), min_quantity__gt=0, quantity__gt=0).count()
+        out_of_stock_count = base_items.filter(Q(quantity__lte=0) | Q(quantity__isnull=True)).count()
         optimal_count = max(0, total_items - low_stock_count - out_of_stock_count)
 
+        # Filters for query
+        items_qs = base_items.select_related('category').order_by('name')
+
+        # 1. Text Search Filter
+        search_query = request.GET.get('q', '').strip()
+        if search_query:
+            q_filter = Q(name__icontains=search_query) | Q(category__name__icontains=search_query)
+            if search_query.isdigit():
+                q_filter |= Q(id=int(search_query))
+            items_qs = items_qs.filter(q_filter)
+
+        # 2. Stock Health Status Filter
+        status_filter = request.GET.get('status', 'all').strip().lower()
+        if status_filter == 'in-stock':
+            items_qs = items_qs.filter(quantity__gt=F('min_quantity')).filter(quantity__gt=0)
+        elif status_filter == 'low-stock':
+            items_qs = items_qs.filter(quantity__lte=F('min_quantity'), min_quantity__gt=0, quantity__gt=0)
+        elif status_filter == 'out-stock':
+            items_qs = items_qs.filter(Q(quantity__lte=0) | Q(quantity__isnull=True))
+        else:
+            status_filter = 'all'
+
+        # Matching items count
+        matching_count = items_qs.count()
+
+        # 3. Server Pagination (default 50 items per page)
+        per_page = request.GET.get('per_page', '50').strip()
+        try:
+            per_page = int(per_page)
+            if per_page not in [25, 50, 100, 200]:
+                per_page = 50
+        except ValueError:
+            per_page = 50
+
+        paginator = Paginator(items_qs, per_page)
+        page_number = request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+
+        # Build preserved query string for pagination links (excluding 'page')
+        query_params = request.GET.copy()
+        query_params.pop('page', None)
+        preserved_query = query_params.urlencode()
+
         return render(request, 'inventory/dashboard.html', {
-            'items': items,
+            'page_obj': page_obj,
+            'items': page_obj,
+            'paginator': paginator,
+            'is_paginated': page_obj.has_other_pages(),
             'category': category_obj,
             'all_categories': all_categories,
             'total_items': total_items,
@@ -597,6 +644,11 @@ class ProductListView(AccountantRequiredMixin, View):
             'low_stock_count': low_stock_count,
             'out_of_stock_count': out_of_stock_count,
             'optimal_count': optimal_count,
+            'search_query': search_query,
+            'status_filter': status_filter,
+            'matching_count': matching_count,
+            'per_page': per_page,
+            'preserved_query': preserved_query,
         })
 
 Dashboard = ProductListView
@@ -626,9 +678,16 @@ class Dashboard2(AccountantRequiredMixin, View):
         })
 
 class CategoryListView(AccountantRequiredMixin,ListView):
-    queryset = Category.objects.all()
+    queryset = Category.objects.annotate(
+        product_count=Count('inventoryitem')
+    ).order_by('name')
     template_name = 'inventory/category_list.html'
     context_object_name = 'category_list'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['total_items'] = InventoryItem.objects.count()
+        return context
 
 # This view handles both displaying the signup form and processing form submissions
 class SignUpView(CreateView):
@@ -6882,13 +6941,13 @@ class PurchaseOrderView(AccountantRequiredMixin, View):
     # GET
     # ─────────────────────────────────────────────────────────────────────────
 
-    def get(self, request):
+    def get(self, request, default_category=None):
         today = datetime.date.today()
         ninety_days_ago = today - timedelta(days=90)
         APRIL_2025 = datetime.date(2025, 4, 1)
 
         categories = Category.objects.all().order_by("name")
-        selected_category_id = request.GET.get("category")
+        selected_category_id = request.GET.get("category") or default_category
         hide_dead = request.GET.get("hide_dead") == "1"
 
         if not selected_category_id:
@@ -6897,6 +6956,8 @@ class PurchaseOrderView(AccountantRequiredMixin, View):
                 "selected_category_id": None,
             })
 
+        is_all_categories = (str(selected_category_id).lower() in ["all", "all_categories", "0"])
+
         # ── Pre-load all voucher data (one DB hit per type)
         sales_map, credit_note_map, internal_customer_map, po_map, gst_map = (
             PurchaseOrderView._preload_voucher_data()
@@ -6904,12 +6965,20 @@ class PurchaseOrderView(AccountantRequiredMixin, View):
 
         tracking_item_map = PurchaseOrderView._preload_tracking_data()
 
-        items = (
-            InventoryItem.objects
-            .filter(category_id=selected_category_id)
-            .select_related("category")
-            .order_by("name")
-        )
+        if is_all_categories:
+            items = (
+                InventoryItem.objects
+                .all()
+                .select_related("category")
+                .order_by("name")
+            )
+        else:
+            items = (
+                InventoryItem.objects
+                .filter(category_id=selected_category_id)
+                .select_related("category")
+                .order_by("name")
+            )
 
         products_data = []
 
@@ -7301,10 +7370,70 @@ class PurchaseOrderView(AccountantRequiredMixin, View):
                 }),
             })
 
+        # ── Bifurcate Order Demand Products
+        demand_products = [
+            p for p in products_data
+            if (p.get("order_urgency") in ["urgent", "warn"] or (p.get("order_final") or 0) > 0)
+            and not p.get("is_dead")
+        ]
+
+        # Sort all demand products by sales velocity (avg_daily desc)
+        demand_products.sort(key=lambda x: x.get("avg_daily") or 0, reverse=True)
+
+        # Classify Top & Most-Selling Products (High-Velocity / Priority 1)
+        # Threshold: avg_daily >= 3.0 (i.e. ~90+ units/month) OR upper velocity tier
+        top_selling_demand = []
+        standard_demand = []
+
+        if demand_products:
+            top_selling_demand = [
+                p for p in demand_products
+                if (p.get("avg_daily") or 0) >= 3.0 or ((p.get("avg_daily") or 0) * 30) >= 90
+            ]
+            # Fallback: if fewer than 3 meet the threshold, take top 40% (min 3, max 10)
+            if len(top_selling_demand) < 3 and len(demand_products) >= 3:
+                take_n = max(3, int(len(demand_products) * 0.4))
+                top_selling_demand = demand_products[:take_n]
+            elif not top_selling_demand and demand_products:
+                top_selling_demand = demand_products[:min(5, len(demand_products))]
+
+            top_ids = {p["id"] for p in top_selling_demand}
+            standard_demand = [p for p in demand_products if p["id"] not in top_ids]
+
+        # Assign priority flags and ranks
+        for rank, p in enumerate(top_selling_demand, 1):
+            p["is_top_seller"] = True
+            p["priority_rank"] = rank
+            p["monthly_run_rate"] = round((p.get("avg_daily") or 0) * 30, 1)
+
+        for rank, p in enumerate(standard_demand, 1):
+            p["is_top_seller"] = False
+            p["priority_rank"] = rank
+            p["monthly_run_rate"] = round((p.get("avg_daily") or 0) * 30, 1)
+
+        # Summary KPIs for the Dashboard
+        total_demand_count = len(demand_products)
+        top_demand_count = len(top_selling_demand)
+        standard_demand_count = len(standard_demand)
+        total_demand_order_units = sum(p.get("order_final") or 0 for p in demand_products)
+        critical_runway_count = sum(
+            1 for p in demand_products
+            if (p.get("runway_days") is not None and p.get("runway_days") <= 14) or p.get("order_urgency") == "urgent"
+        )
+
         return render(request, self.template_name, {
             "categories": categories,
-            "selected_category_id": int(selected_category_id),
+            "selected_category_id": "all" if is_all_categories else int(selected_category_id),
+            "is_all_categories": is_all_categories,
             "products": products_data,
+            "demand_products": demand_products,
+            "top_selling_demand": top_selling_demand,
+            "standard_demand": standard_demand,
+            "total_demand_count": total_demand_count,
+            "top_demand_count": top_demand_count,
+            "standard_demand_count": standard_demand_count,
+            "total_demand_order_units": total_demand_order_units,
+            "critical_runway_count": critical_runway_count,
             "today": today,
             "hide_dead": hide_dead,
         })
@@ -8016,3 +8145,488 @@ def _avg_daily(sales_rows, today):
     total = sum(r["qty"] for r in sales_rows if r["date"] and r["date"] >= APRIL_2025)
     days  = (today - APRIL_2025).days or 1
     return round(total / days, 4)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Year-on-Year Sales Comparison View
+# ─────────────────────────────────────────────────────────────────────────────
+
+import calendar
+
+class YearOnYearSalesComparisonView(AccountantRequiredMixin, View):
+    template_name = "inventory/year_on_year_sales_comparison.html"
+
+    def get(self, request):
+        today = datetime.date.today()
+        comparison_type = request.GET.get("comparison_type", "month")
+        if comparison_type not in ["month", "range"]:
+            comparison_type = "month"
+
+        selected_group = request.GET.get("group", "").strip()
+        selected_month = request.GET.get("month", "").strip()
+
+        # Multi-product selection support (e.g. products=1&products=2 or products=1,2)
+        raw_products = request.GET.getlist("products") or request.GET.getlist("product")
+        selected_product_ids = []
+        for p in raw_products:
+            for part in str(p).split(","):
+                part = part.strip()
+                if part and part.isdigit():
+                    selected_product_ids.append(int(part))
+        selected_product_ids = list(dict.fromkeys(selected_product_ids))  # deduplicate preserving order
+
+        # Period 1 & Period 2 ranges (with sensible defaults)
+        p1_from = request.GET.get("p1_from", "").strip() or request.GET.get("from_date", "").strip() or "2025-06-01"
+        p1_to = request.GET.get("p1_to", "").strip() or request.GET.get("to_date", "").strip() or "2025-08-31"
+        p2_from = request.GET.get("p2_from", "").strip() or "2026-05-02"
+        p2_to = request.GET.get("p2_to", "").strip() or "2026-07-15"
+
+        # Month selection parsing (default to current latest data month: August (8))
+        latest_data_month = 8
+        month_num = latest_data_month
+        if selected_month:
+            if "-" in selected_month:
+                try:
+                    month_num = int(selected_month.split("-")[1])
+                except (ValueError, IndexError):
+                    month_num = latest_data_month
+            elif selected_month.isdigit():
+                month_num = int(selected_month)
+            else:
+                for m_idx in range(1, 13):
+                    if calendar.month_name[m_idx].lower().startswith(selected_month.lower()) or calendar.month_abbr[m_idx].lower().startswith(selected_month.lower()):
+                        month_num = m_idx
+                        break
+
+        if month_num < 1 or month_num > 12:
+            month_num = latest_data_month
+
+        month_name = calendar.month_name[month_num]
+        month_abbr = calendar.month_abbr[month_num]
+        month_input_val = f"2026-{month_num:02d}"
+
+        # 1. Fetch ALL candidate inventory items (all 741 products: Thermoforming, Resins, Printers, Filaments, Spares, etc.)
+        all_candidate_items = list(
+            InventoryItem.objects
+            .select_related("category")
+            .order_by("name")
+        )
+
+        product_groups = {
+            "All Products": [],
+            "Thermoforming & Sheets": [],
+            "Resins": [],
+            "3D Printers": [],
+            "Spare Parts & Accessories": [],
+            "Filaments & Others": [],
+        }
+
+        all_search_items = []
+        for item in all_candidate_items:
+            name_lower = (item.name or "").lower()
+            cat_name = item.category.name if item.category else "General"
+            cat_lower = cat_name.lower()
+
+            if "resin" in cat_lower or "resin" in name_lower:
+                grp = "Resins"
+            elif (
+                "sheet" in cat_lower
+                or "sheet" in name_lower
+                or "erkodur" in name_lower
+                or "zendura" in name_lower
+                or "molecur" in name_lower
+                or "molecule" in name_lower
+                or "thermoforming" in cat_lower
+                or "erko" in name_lower
+                or "bay" in cat_lower
+                or "bay" in name_lower
+                or "coherz" in cat_lower
+                or "coerce" in cat_lower
+            ):
+                grp = "Thermoforming & Sheets"
+            elif "printer" in cat_lower or "printer" in name_lower:
+                grp = "3D Printers"
+            elif "filament" in cat_lower or "filament" in name_lower:
+                grp = "Filaments & Others"
+            elif (
+                "spare" in cat_lower
+                or "spare" in name_lower
+                or "part" in cat_lower
+                or "part" in name_lower
+                or "acces" in cat_lower
+                or "acces" in name_lower
+            ):
+                grp = "Spare Parts & Accessories"
+            else:
+                grp = "Filaments & Others"
+
+            product_groups[grp].append(item)
+            product_groups["All Products"].append(item)
+
+            all_search_items.append({
+                "id": item.id,
+                "name": item.name,
+                "category": cat_name,
+                "group": grp,
+                "brand": grp,
+                "is_selected": item.id in selected_product_ids,
+            })
+
+        all_item_ids = [p.id for p in all_candidate_items]
+
+        # 2. Identify target items
+        selected_label = "All Products"
+        item_ids = []
+
+        if selected_product_ids:
+            item_ids = [pid for pid in selected_product_ids if pid in all_item_ids]
+            if len(item_ids) == 1:
+                single_item = next((p for p in all_candidate_items if p.id == item_ids[0]), None)
+                selected_label = single_item.name if single_item else "1 Selected Product"
+            elif len(item_ids) > 1:
+                selected_label = f"{len(item_ids)} Selected Products (Sum Total)"
+
+        if not item_ids:
+            if selected_group and selected_group in product_groups and selected_group != "All Products":
+                selected_label = f"All {selected_group}"
+                item_ids = [p.id for p in product_groups[selected_group]]
+            else:
+                selected_label = "All Products"
+                item_ids = all_item_ids
+
+        # 3. Fetch sales rows with both quantity and amount (revenue in ₹)
+        raw_rows = list(
+            VoucherStockItem.objects
+            .filter(
+                voucher__voucher_type__iexact="TAX INVOICE",
+                item_id__in=item_ids,
+            )
+            .values("quantity", "amount", "voucher__date")
+        )
+        if not raw_rows:
+            raw_rows = [
+                {"quantity": d["outwards_quantity"], "amount": 0.0, "voucher__date": d["date"]}
+                for d in DailyStockData.objects.filter(
+                    product_id__in=item_ids, outwards_quantity__gt=0
+                ).values("outwards_quantity", "date")
+            ]
+
+        # 4. Compute Month-Wise (Jan - Dec 12-month) comparison data for toggle functionality
+        month_qty_2025 = defaultdict(float)
+        month_qty_2026 = defaultdict(float)
+        month_amt_2025 = defaultdict(float)
+        month_amt_2026 = defaultdict(float)
+
+        for r in raw_rows:
+            dt = r["voucher__date"]
+            if dt:
+                q = float(r["quantity"] or 0)
+                a = float(r["amount"] or 0)
+                if dt.year == 2025:
+                    month_qty_2025[dt.month] += q
+                    month_amt_2025[dt.month] += a
+                elif dt.year == 2026:
+                    month_qty_2026[dt.month] += q
+                    month_amt_2026[dt.month] += a
+
+        monthly_comparison_data = []
+        for m in range(1, 13):
+            q25 = round(month_qty_2025[m], 2)
+            q26 = round(month_qty_2026[m], 2)
+            diff_q = round(q26 - q25, 2)
+            pct_q = round(((q26 - q25) / q25 * 100), 2) if q25 > 0 else None
+
+            a25 = round(month_amt_2025[m], 2)
+            a26 = round(month_amt_2026[m], 2)
+            diff_a = round(a26 - a25, 2)
+            pct_a = round(((a26 - a25) / a25 * 100), 2) if a25 > 0 else None
+
+            p25 = round(a25 / q25, 2) if q25 > 0 else 0.0
+            p26 = round(a26 / q26, 2) if q26 > 0 else 0.0
+
+            monthly_comparison_data.append({
+                "month_num": m,
+                "label": calendar.month_abbr[m],
+                "month_name": calendar.month_name[m],
+                "year_2025": q25,
+                "year_2026": q26,
+                "difference": diff_q,
+                "growth_percent": pct_q,
+                "amount_2025": a25,
+                "amount_2026": a26,
+                "amount_difference": diff_a,
+                "amount_growth_percent": pct_a,
+                "price_2025": p25,
+                "price_2026": p26,
+            })
+
+        # 5. Compute Day-Wise comparison data
+        comparison_data = []
+        error = None
+        p1_label = ""
+        p2_label = ""
+        using_august_2026 = False
+        month_2026_name = month_name
+        month_2026_abbr = month_abbr
+
+        try:
+            if comparison_type == "month":
+                sales_2025_by_day = defaultdict(float)
+                sales_2026_by_day = defaultdict(float)
+                amt_2025_by_day = defaultdict(float)
+                amt_2026_by_day = defaultdict(float)
+
+                for r in raw_rows:
+                    dt = r["voucher__date"]
+                    if dt and dt.month == month_num:
+                        q = float(r["quantity"] or 0)
+                        a = float(r["amount"] or 0)
+                        if dt.year == 2025:
+                            sales_2025_by_day[dt.day] += q
+                            amt_2025_by_day[dt.day] += a
+                        elif dt.year == 2026:
+                            sales_2026_by_day[dt.day] += q
+                            amt_2026_by_day[dt.day] += a
+
+                # If 2026 has no data for this month (e.g. current month September),
+                # use latest available current data of August 2026 for the 2026 comparison
+                if sum(sales_2026_by_day.values()) == 0 and month_num >= 9:
+                    using_august_2026 = True
+                    sales_2026_by_day = defaultdict(float)
+                    amt_2026_by_day = defaultdict(float)
+                    for r in raw_rows:
+                        dt = r["voucher__date"]
+                        if dt and dt.year == 2026 and dt.month == 8:
+                            sales_2026_by_day[dt.day] += float(r["quantity"] or 0)
+                            amt_2026_by_day[dt.day] += float(r["amount"] or 0)
+
+                target_2026_month = 8 if using_august_2026 else month_num
+                month_2026_name = calendar.month_name[target_2026_month]
+                month_2026_abbr = calendar.month_abbr[target_2026_month]
+
+                max_days_2025 = calendar.monthrange(2025, month_num)[1]
+                max_days_2026 = calendar.monthrange(2026, target_2026_month)[1]
+                days_in_month = max(max_days_2025, max_days_2026)
+
+                for day_num in range(1, days_in_month + 1):
+                    q25 = sales_2025_by_day[day_num]
+                    q26 = sales_2026_by_day[day_num]
+                    diff = q26 - q25
+                    pct = ((q26 - q25) / q25 * 100) if q25 > 0 else None
+
+                    a25 = amt_2025_by_day[day_num]
+                    a26 = amt_2026_by_day[day_num]
+                    diff_a = a26 - a25
+                    pct_a = ((a26 - a25) / a25 * 100) if a25 > 0 else None
+
+                    p25 = (a25 / q25) if q25 > 0 else 0.0
+                    p26 = (a26 / q26) if q26 > 0 else 0.0
+
+                    date_p1_str = f"{month_abbr} {day_num}, 2025" if day_num <= max_days_2025 else "—"
+                    date_p2_str = f"{month_2026_abbr} {day_num}, 2026" if day_num <= max_days_2026 else "—"
+
+                    if using_august_2026:
+                        sublabel = f"{month_abbr} {day_num} (2025) vs Aug {day_num} (2026 Active Data)"
+                    else:
+                        sublabel = f"2025 vs 2026 ({month_abbr} {day_num})"
+
+                    comparison_data.append({
+                        "label": f"Day {day_num}" if using_august_2026 else f"{month_abbr} {day_num}",
+                        "day": day_num,
+                        "date_p1": date_p1_str,
+                        "date_p2": date_p2_str,
+                        "sublabel": sublabel,
+                        "year_2025": round(q25, 2),
+                        "year_2026": round(q26, 2),
+                        "difference": round(diff, 2),
+                        "growth_percent": round(pct, 2) if pct is not None else None,
+                        "amount_2025": round(a25, 2),
+                        "amount_2026": round(a26, 2),
+                        "amount_difference": round(diff_a, 2),
+                        "amount_growth_percent": round(pct_a, 2) if pct_a is not None else None,
+                        "price_2025": round(p25, 2),
+                        "price_2026": round(p26, 2),
+                    })
+
+            else:
+                # Two separate date ranges: Period 1 vs Period 2
+                try:
+                    p1_start = datetime.datetime.strptime(p1_from, "%Y-%m-%d").date()
+                except ValueError:
+                    p1_start = datetime.date(2025, 6, 1)
+
+                try:
+                    p1_end = datetime.datetime.strptime(p1_to, "%Y-%m-%d").date()
+                except ValueError:
+                    p1_end = datetime.date(2025, 8, 31)
+
+                if p1_end < p1_start:
+                    p1_start, p1_end = p1_end, p1_start
+
+                try:
+                    p2_start = datetime.datetime.strptime(p2_from, "%Y-%m-%d").date()
+                except ValueError:
+                    p2_start = datetime.date(2026, 5, 2)
+
+                try:
+                    p2_end = datetime.datetime.strptime(p2_to, "%Y-%m-%d").date()
+                except ValueError:
+                    p2_end = datetime.date(2026, 7, 15)
+
+                if p2_end < p2_start:
+                    p2_start, p2_end = p2_end, p2_start
+
+                p1_label = f"{p1_start.strftime('%b %d, %Y')} – {p1_end.strftime('%b %d, %Y')}"
+                p2_label = f"{p2_start.strftime('%b %d, %Y')} – {p2_end.strftime('%b %d, %Y')}"
+
+                # Daily sales and amount lookup
+                sales_by_date = defaultdict(float)
+                amt_by_date = defaultdict(float)
+                for r in raw_rows:
+                    dt = r["voucher__date"]
+                    if dt:
+                        sales_by_date[dt] += float(r["quantity"] or 0)
+                        amt_by_date[dt] += float(r["amount"] or 0)
+
+                len_p1 = (p1_end - p1_start).days + 1
+                len_p2 = (p2_end - p2_start).days + 1
+                total_days = max(len_p1, len_p2)
+
+                for i in range(total_days):
+                    dt1 = p1_start + datetime.timedelta(days=i) if i < len_p1 else None
+                    dt2 = p2_start + datetime.timedelta(days=i) if i < len_p2 else None
+
+                    q1 = sales_by_date[dt1] if dt1 else 0.0
+                    q2 = sales_by_date[dt2] if dt2 else 0.0
+                    diff = q2 - q1
+                    pct = ((q2 - q1) / q1 * 100) if q1 > 0 else None
+
+                    a1 = amt_by_date[dt1] if dt1 else 0.0
+                    a2 = amt_by_date[dt2] if dt2 else 0.0
+                    diff_a = a2 - a1
+                    pct_a = ((a2 - a1) / a1 * 100) if a1 > 0 else None
+
+                    p1 = (a1 / q1) if q1 > 0 else 0.0
+                    p2 = (a2 / q2) if q2 > 0 else 0.0
+
+                    p1_str = dt1.strftime("%b %d, %Y") if dt1 else "—"
+                    p2_str = dt2.strftime("%b %d, %Y") if dt2 else "—"
+
+                    comparison_data.append({
+                        "label": f"Day {i + 1}",
+                        "sublabel": f"P1: {p1_str} | P2: {p2_str}",
+                        "date_p1": p1_str,
+                        "date_p2": p2_str,
+                        "year_2025": round(q1, 2),  # Period 1
+                        "year_2026": round(q2, 2),  # Period 2
+                        "difference": round(diff, 2),
+                        "growth_percent": round(pct, 2) if pct is not None else None,
+                        "amount_2025": round(a1, 2),
+                        "amount_2026": round(a2, 2),
+                        "amount_difference": round(diff_a, 2),
+                        "amount_growth_percent": round(pct_a, 2) if pct_a is not None else None,
+                        "price_2025": round(p1, 2),
+                        "price_2026": round(p2, 2),
+                    })
+
+        except Exception as e:
+            error = str(e)
+
+        # 6. Summaries (Quantity, Amounts, Revenue, Average Growth Rates)
+        total_2025 = sum(r["year_2025"] for r in comparison_data)
+        total_2026 = sum(r["year_2026"] for r in comparison_data)
+        diff_total = total_2026 - total_2025
+        growth_total = ((total_2026 - total_2025) / total_2025 * 100) if total_2025 > 0 else None
+
+        total_amount_2025 = sum(r.get("amount_2025", 0) for r in comparison_data)
+        total_amount_2026 = sum(r.get("amount_2026", 0) for r in comparison_data)
+        amount_difference = total_amount_2026 - total_amount_2025
+        amount_growth_percent = round(((total_amount_2026 - total_amount_2025) / total_amount_2025 * 100), 2) if total_amount_2025 > 0 else None
+
+        # Average of Month Growth / Decline (Mean of daily growth rates)
+        valid_growths = [r["growth_percent"] for r in comparison_data if r["growth_percent"] is not None]
+        avg_month_growth = round(sum(valid_growths) / len(valid_growths), 2) if valid_growths else None
+
+        valid_amt_growths = [r["amount_growth_percent"] for r in comparison_data if r.get("amount_growth_percent") is not None]
+        avg_month_amt_growth = round(sum(valid_amt_growths) / len(valid_amt_growths), 2) if valid_amt_growths else None
+
+        # Average unit price
+        avg_price_2025 = round(total_amount_2025 / total_2025, 2) if total_2025 > 0 else 0.0
+        avg_price_2026 = round(total_amount_2026 / total_2026, 2) if total_2026 > 0 else 0.0
+
+        peak_2025_val = 0.0
+        peak_2025_day = "—"
+        peak_2026_val = 0.0
+        peak_2026_day = "—"
+        active_days_2025 = 0
+        active_days_2026 = 0
+
+        for r in comparison_data:
+            v25 = r["year_2025"]
+            v26 = r["year_2026"]
+            if v25 > 0:
+                active_days_2025 += 1
+                if v25 > peak_2025_val:
+                    peak_2025_val = v25
+                    peak_2025_day = r.get("date_p1") or r["label"]
+            if v26 > 0:
+                active_days_2026 += 1
+                if v26 > peak_2026_val:
+                    peak_2026_val = v26
+                    peak_2026_day = r.get("date_p2") or r["label"]
+
+        num_days = len(comparison_data) or 1
+        avg_daily_2025 = round(total_2025 / num_days, 2)
+        avg_daily_2026 = round(total_2026 / num_days, 2)
+
+        context = {
+            "comparison_type": comparison_type,
+            "selected_group": selected_group,
+            "selected_month": selected_month,
+            "month_num": month_num,
+            "month_name": month_name,
+            "month_abbr": month_abbr,
+            "month_input_val": month_input_val,
+            "month_options": [(i, calendar.month_name[i]) for i in range(1, 13)],
+            "using_august_2026": using_august_2026,
+            "month_2026_name": month_2026_name,
+            "month_2026_abbr": month_2026_abbr,
+            "p1_from": p1_from,
+            "p1_to": p1_to,
+            "p2_from": p2_from,
+            "p2_to": p2_to,
+            "p1_label": p1_label,
+            "p2_label": p2_label,
+            "selected_product_ids": selected_product_ids,
+            "selected_label": selected_label,
+            "product_groups": product_groups,
+            "all_sheet_items": all_search_items,
+            "all_search_items": all_search_items,
+            "today": today,
+            "total_2025": round(total_2025, 2),
+            "total_2026": round(total_2026, 2),
+            "difference": round(diff_total, 2),
+            "growth_percent": round(growth_total, 2) if growth_total is not None else None,
+            "total_amount_2025": round(total_amount_2025, 2),
+            "total_amount_2026": round(total_amount_2026, 2),
+            "amount_difference": round(amount_difference, 2),
+            "amount_growth_percent": amount_growth_percent,
+            "avg_month_growth": avg_month_growth,
+            "avg_month_amt_growth": avg_month_amt_growth,
+            "avg_price_2025": avg_price_2025,
+            "avg_price_2026": avg_price_2026,
+            "peak_2025_val": round(peak_2025_val, 2),
+            "peak_2025_day": peak_2025_day,
+            "peak_2026_val": round(peak_2026_val, 2),
+            "peak_2026_day": peak_2026_day,
+            "active_days_2025": active_days_2025,
+            "active_days_2026": active_days_2026,
+            "avg_daily_2025": avg_daily_2025,
+            "avg_daily_2026": avg_daily_2026,
+            "comparison_data": comparison_data,
+            "comparison_data_json": comparison_data,
+            "monthly_comparison_data": monthly_comparison_data,
+            "monthly_comparison_data_json": monthly_comparison_data,
+            "error": error,
+        }
+        return render(request, self.template_name, context)

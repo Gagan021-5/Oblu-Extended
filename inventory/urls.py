@@ -36,6 +36,7 @@ urlpatterns = [
     path('sales-comparison/', SalesComparisonDashboardView.as_view(), name='sales_comparison'),
     path("api/inventory_by_category/", get_inventory_by_category, name="get_inventory_by_category"),
     path('purchase-order/', PurchaseOrderView.as_view(), name='purchase_order'),
+    path('purchase-order/dashboard/', PurchaseOrderView.as_view(), {'default_category': 'all'}, name='purchase_order_dashboard'),
     path('purchase-order-prev/', PurchaseOrderViewPrev.as_view(), name='purchase_order_prev'),
     path("purchase-order/top-customers/", TopCustomersAPIView.as_view(), name="po_top_customers"),
     path("purchase-orders/tally/", views.TallyPurchaseOrderListView.as_view(), name="tally_po_list"),
@@ -67,4 +68,7 @@ urlpatterns = [
         name="product_analytics_detail",
     ),
 
+    # Year-on-year sales comparison
+    path("year-on-year-sales/", views.YearOnYearSalesComparisonView.as_view(), name="year_on_year_sales"),
+    path("year-on-year-sales", views.YearOnYearSalesComparisonView.as_view()),
 ]

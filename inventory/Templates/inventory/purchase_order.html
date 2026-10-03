@@ -1,8 +1,16 @@
 {% load static %}
-
-{% block title %}Purchase Order Generator{% endblock %}
-
-{% block extra_head %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Purchase Order Planner — Oblu</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <style>
   /* ── Base ─────────────────────────────────────────────────────────── */
   .po-wrapper { padding: 24px; max-width: 100%; }
@@ -28,24 +36,127 @@
 
   /* ── Page header ─────────────────────────────────────────────────── */
   .po-header {
-    display:flex; align-items:center; justify-content:space-between;
-    margin-bottom:24px; flex-wrap:wrap; gap:12px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+    gap: 16px;
   }
-  .po-header h1 { font-size:1.5rem; font-weight:700; color:#1e293b; margin:0; }
-  .badge-cat { background:#ede9fe; color:#6d28d9; border-radius:20px; padding:5px 14px; font-size:.85rem; font-weight:600; }
-  .right-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-  .right-actions select {
-    padding:8px 14px; border-radius:8px; border:1.5px solid #e2e8f0;
-    font-size:.9rem; background:#fff; color:#334155; cursor:pointer;
+  .header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
-  .btn-dl     { background:#10b981; color:#fff; border:none; padding:9px 20px; border-radius:8px; font-size:.9rem; font-weight:600; cursor:pointer; }
-  .btn-dl:hover { background:#059669; }
-  .btn-print  { background:#6366f1; color:#fff; border:none; padding:9px 20px; border-radius:8px; font-size:.9rem; font-weight:600; cursor:pointer; }
+  .header-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .po-header h1 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: #0f172a;
+    margin: 0;
+  }
+  .badge-cat {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .header-subtitle {
+    font-size: 0.84rem;
+    color: #64748b;
+  }
+  .right-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .category-select-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .category-select {
+    padding: 8px 30px 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 0.84rem;
+    background: #ffffff;
+    color: #1e293b;
+    font-weight: 500;
+    cursor: pointer;
+    appearance: none;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .category-select:focus {
+    outline: none;
+    border-color: #059669;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+  }
+  .select-chevron {
+    position: absolute;
+    right: 10px;
+    pointer-events: none;
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+  .btn-action-outline {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+    transition: all 0.14s;
+  }
+  .btn-action-outline:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+  }
   .btn-toggle-dead {
-    background:#fff; border:1.5px solid #e2e8f0; color:#334155;
-    padding:9px 20px; border-radius:8px; font-size:.9rem; font-weight:600; cursor:pointer;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+    transition: all 0.14s;
   }
-  .btn-toggle-dead.active { background:#fee2e2; border-color:#fca5a5; color:#dc2626; }
+  .btn-toggle-dead:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+  }
+  .btn-toggle-dead.active {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #b91c1c;
+  }
 
   /* ── Summary strip ───────────────────────────────────────────────── */
   .summary-strip { display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:14px; margin-bottom:28px; }
@@ -305,6 +416,553 @@
     color: #991b1b;
 }
 
+  /* ── VIEW SWITCHER SEGMENTED CONTROL ───────────────────────────── */
+  .view-segmented-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 24px;
+  }
+  .seg-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 7px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #64748b;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+  .seg-btn:hover {
+    color: #0f172a;
+  }
+  .seg-btn.active {
+    background: #ffffff;
+    color: #059669;
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+  .seg-count {
+    background: #e2e8f0;
+    color: #475569;
+    border-radius: 12px;
+    padding: 1.5px 7px;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .seg-btn.active .seg-count {
+    background: #ecfdf5;
+    color: #059669;
+  }
+
+  /* ── REFINED BENTO KPI STRIP (Linear / Stripe style) ────────────── */
+  .demand-kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .kpi-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px 18px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    position: relative;
+  }
+  .kpi-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 6px 16px -2px rgba(15, 23, 42, 0.06);
+    transform: translateY(-1px);
+  }
+  .kpi-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .kpi-label {
+    font-size: 0.74rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+  }
+  .kpi-icon-pill {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+  }
+  .icon-emerald { background: #ecfdf5; color: #059669; }
+  .icon-amber   { background: #fffbeb; color: #d97706; }
+  .icon-indigo  { background: #eef2ff; color: #4f46e5; }
+  .icon-rose    { background: #fef2f2; color: #e11d48; }
+  .icon-sky     { background: #f0f9ff; color: #0284c7; }
+
+  .kpi-value {
+    font-size: 1.65rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: #0f172a;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .kpi-value.text-amber { color: #d97706; }
+  .kpi-value.text-rose  { color: #e11d48; }
+  .kpi-sub {
+    font-size: 0.77rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  /* ── SECTION 1: EXECUTIVE PRIORITY SHOWCASE ─────────────────────── */
+  .priority-section-wrapper {
+    margin-bottom: 32px;
+  }
+  .clean-section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .csh-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .clean-section-header h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+    margin: 0;
+  }
+  .csh-pill {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 2.5px 9px;
+    border-radius: 20px;
+  }
+  .csh-sub {
+    font-size: 0.83rem;
+    color: #64748b;
+    margin: 4px 0 0;
+    max-width: 800px;
+  }
+
+  .priority-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 18px;
+  }
+
+  .priority-item-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .priority-item-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.08);
+    transform: translateY(-2px);
+  }
+
+  .card-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .card-rank-tag {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2.5px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .urgency-pill {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2.5px 9px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    letter-spacing: 0.01em;
+  }
+  .pill-urgent {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+  }
+  .pill-warn {
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+  }
+  .urgency-pill .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+    display: inline-block;
+  }
+
+  .card-product-name {
+    font-size: 0.94rem;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.4;
+    margin: 0 0 6px;
+    min-height: 40px;
+  }
+  .card-meta-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-size: 0.74rem;
+    color: #64748b;
+    margin-bottom: 14px;
+  }
+  .card-cat-badge {
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 600;
+    padding: 1.5px 6px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+  }
+  .meta-dot { color: #cbd5e1; }
+  .text-emerald { color: #059669 !important; font-weight: 600; }
+  .text-amber   { color: #d97706 !important; font-weight: 600; }
+  .text-rose    { color: #dc2626 !important; font-weight: 600; }
+
+  /* 4-Stat clean divider matrix */
+  .card-stats-matrix {
+    background: #f8fafc;
+    border: 1px solid #edf2f7;
+    border-radius: 8px;
+    padding: 10px 8px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    align-items: center;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  .stat-col {
+    padding: 0 4px;
+  }
+  .stat-lbl {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #94a3b8;
+    margin-bottom: 2px;
+  }
+  .stat-val {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+  }
+  .stat-unit {
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: #64748b;
+  }
+
+  /* Integrated Order Recommendation Footer */
+  .card-order-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #ecfdf5;
+    border: 1px solid #d1fae5;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+  }
+  .order-rec-label {
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #047857;
+    display: block;
+  }
+  .order-rec-qty {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #047857;
+    line-height: 1.1;
+  }
+  .order-rec-unit {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #059669;
+  }
+  .btn-locate-primary {
+    background: #059669;
+    color: #ffffff;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn-locate-primary:hover {
+    background: #047857;
+  }
+
+  /* Secondary modal tools */
+  .card-quick-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 10px;
+  }
+  .btn-tool {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 0.73rem;
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: inherit;
+    transition: all 0.14s;
+  }
+  .btn-tool:hover {
+    background: #f8fafc;
+    color: #0f172a;
+    border-color: #cbd5e1;
+  }
+
+  /* ── SECTION 2: STANDARD DEMAND TABLE ───────────────────────────── */
+  .standard-demand-wrapper {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin-bottom: 32px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  }
+  .std-table-scroll {
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+  }
+  .std-demand-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.84rem;
+  }
+  .std-demand-table thead th {
+    background: #f8fafc;
+    color: #64748b;
+    padding: 10px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+    text-align: left;
+  }
+  .std-demand-table tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+    vertical-align: middle;
+  }
+  .std-demand-table tbody tr:hover td {
+    background: #fafbff;
+  }
+  .std-prod-name {
+    font-weight: 600;
+    color: #0f172a;
+    font-size: 0.86rem;
+  }
+  .std-prod-meta {
+    font-size: 0.73rem;
+    color: #64748b;
+    margin-top: 1px;
+  }
+  .std-actions-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btn-table-locate {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: inherit;
+    transition: all 0.14s;
+  }
+  .btn-table-locate:hover {
+    background: #059669;
+    color: #ffffff;
+    border-color: #059669;
+  }
+  .btn-icon-sub {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.14s;
+  }
+  .btn-icon-sub:hover {
+    background: #f8fafc;
+    color: #0f172a;
+    border-color: #cbd5e1;
+  }
+
+  /* ── SECTION 3: CATALOG FILTER CHIPS ────────────────────────────── */
+  .catalog-filter-chips {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .catalog-filter-chips::-webkit-scrollbar { display: none; }
+  .cat-chip {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .14s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+  }
+  .cat-chip:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+  }
+  .cat-chip.active {
+    background: #059669;
+    color: #ffffff;
+    border-color: #059669;
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+  }
+  .cat-chip .c-badge {
+    background: #f1f5f9;
+    color: #64748b;
+    border-radius: 12px;
+    padding: 1px 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .cat-chip.active .c-badge {
+    background: rgba(0, 0, 0, 0.2);
+    color: #ffffff;
+  }
+
+  @keyframes rowFlash {
+    0% { background-color: #d1fae5; box-shadow: inset 0 0 0 2px #059669; }
+    50% { background-color: #a7f3d0; box-shadow: inset 0 0 0 3px #059669; }
+    100% { background-color: transparent; box-shadow: none; }
+  }
+  .row-highlight-pulse {
+    animation: rowFlash 2s ease-in-out !important;
+  }
+
+  @media (max-width: 768px) {
+    .po-wrapper { padding: 10px 4px; box-sizing: border-box; overflow-x: hidden; width: 100%; max-width: 100%; }
+    .category-card { padding: 28px 18px; margin: 20px auto; }
+    .po-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .right-actions { width: 100%; justify-content: flex-start; }
+    .summary-strip { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px; }
+    .sc { padding: 12px 14px; }
+    .sc-value { font-size: 1.25rem; }
+    .table-scroll { width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .legend-section { padding: 20px 16px; }
+    .legend-grid { grid-template-columns: 1fr; gap: 14px; }
+    .math-steps { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 480px) {
+    .summary-strip { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .sc { padding: 10px 10px; }
+    .sc-value { font-size: 1.1rem; }
+    .sc-label { font-size: .68rem; }
+    .right-actions button, .right-actions select { font-size: .8rem; padding: 7px 12px; }
+  }
 
   @media print {
     .no-print { display:none !important; }
@@ -316,20 +974,22 @@
     .modal-overlay { display:none !important; }
   }
 </style>
-{% endblock %}
-
-{% block content %}
+</head>
+<body>
 <div class="po-wrapper">
 
 {% if products is None %}
 {# ── Category selector ──────────────────────────────────────────────── #}
 <div class="category-card">
-  <div style="font-size:2.5rem;margin-bottom:12px">📦</div>
-  <h2>Purchase Order Generator</h2>
-  <p>Select a product category to load the purchase order analysis.</p>
+  <div style="width:52px;height:52px;border-radius:12px;background:#ecfdf5;color:#059669;display:inline-flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:14px">
+    <i class="bi bi-box-seam"></i>
+  </div>
+  <h2>Purchase Order Planner</h2>
+  <p>Select a product category to load demand forecasting, stock runways, and automated replenishment orders.</p>
   <form method="get">
     <select name="category" required>
       <option value="" disabled selected>— Select a category —</option>
+      <option value="all">All Categories (Global View)</option>
       {% for cat in categories %}
         <option value="{{ cat.id }}">{{ cat.name }}</option>
       {% endfor %}
@@ -339,38 +999,329 @@
 </div>
 
 {% else %}
-{# ── Header ──────────────────────────────────────────────────────────── #}
+{# ── Executive Header Bar ──────────────────────────────────────────── #}
 <div class="po-header">
-  <div>
-    <h1>📦 Purchase Order Planner</h1>
-    <span class="badge-cat">{% for cat in categories %}{% if cat.id == selected_category_id %}{{ cat.name }}{% endif %}{% endfor %}</span>
+  <div class="header-left">
+    <div class="header-title-row">
+      <h1>Purchase Order Planner</h1>
+      <span class="badge-cat">
+        {% if is_all_categories %}
+          All Categories (Global View)
+        {% else %}
+          {% for cat in categories %}{% if cat.id == selected_category_id %}{{ cat.name }}{% endif %}{% endfor %}
+        {% endif %}
+      </span>
+    </div>
+    <div class="header-subtitle">Dynamic lead-time demand forecasting and automated supplier replenishment</div>
   </div>
   <div class="right-actions no-print">
     <form method="get" style="display:inline-flex;gap:8px;align-items:center" id="filterForm">
-      <select name="category" onchange="this.form.submit()">
-        {% for cat in categories %}
-          <option value="{{ cat.id }}" {% if cat.id == selected_category_id %}selected{% endif %}>{{ cat.name }}</option>
-        {% endfor %}
-      </select>
+      <div class="category-select-wrap">
+        <select name="category" class="category-select" onchange="this.form.submit()">
+          <option value="all" {% if is_all_categories %}selected{% endif %}>All Categories (Global View)</option>
+          {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if cat.id == selected_category_id and not is_all_categories %}selected{% endif %}>{{ cat.name }}</option>
+          {% endfor %}
+        </select>
+        <i class="bi bi-chevron-down select-chevron"></i>
+      </div>
       <input type="hidden" name="hide_dead" id="hideDeadInput" value="{{ hide_dead|yesno:'1,0' }}">
     </form>
     <button class="btn-toggle-dead {% if hide_dead %}active{% endif %}" onclick="toggleDeadFilter()" id="deadFilterBtn">
-      {% if hide_dead %}💀 Show Dead Stock{% else %}💀 Hide Dead Stock{% endif %}
+      {% if hide_dead %}<i class="bi bi-eye"></i> Show Dead Stock{% else %}<i class="bi bi-eye-slash"></i> Hide Dead Stock{% endif %}
     </button>
-    <button class="btn-dl" onclick="downloadPO()">⬇ Download CSV</button>
-    <button class="btn-print" onclick="window.print()">🖨 Print</button>
+    <button class="btn-action-outline" onclick="downloadPO()"><i class="bi bi-download"></i> Export CSV</button>
+    <button class="btn-action-outline" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
   </div>
 </div>
 
-{# ── Summary strip ─────────────────────────────────────────────────── #}
-<div class="summary-strip no-print">
-  <div class="sc"><span class="sc-label">Total Products</span><span class="sc-value">{{ products|length }}</span></div>
-  <div class="sc danger"><span class="sc-label">🔴 Urgent Orders</span><span id="urgentCount" class="sc-value">—</span></div>
-  <div class="sc warn">  <span class="sc-label">🟡 Need to Order</span><span id="warnCount"   class="sc-value">—</span></div>
-  <div class="sc purple"><span class="sc-label">💀 Dead Stock</span>   <span id="deadCount"   class="sc-value">—</span></div>
-  <div class="sc">       <span class="sc-label">📦 Overstocked</span>  <span id="overCount"   class="sc-value">—</span></div>
-  <div class="sc green"> <span class="sc-label">✅ Sufficient</span>   <span id="okCount"     class="sc-value">—</span></div>
+{# ── View Switcher Segmented Control ────────────────────────────────── #}
+<div class="view-segmented-control no-print">
+  <button type="button" class="seg-btn active" id="tabDemandDashboard" onclick="switchPOView('dashboard')">
+    <i class="bi bi-lightning-charge"></i> Priority Demand Dashboard
+    <span class="seg-count">{{ total_demand_count|default:0 }}</span>
+  </button>
+  <button type="button" class="seg-btn" id="tabFullCatalog" onclick="switchPOView('catalog')">
+    <i class="bi bi-table"></i> Full Catalog Planner
+    <span class="seg-count">{{ products|length }}</span>
+  </button>
 </div>
+
+{# ── Priority Order Demand Dashboard View ──────────────────────────── #}
+<div id="demandDashboardView">
+
+  {# Refined Bento KPI Strip #}
+  <div class="demand-kpi-strip no-print">
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">Active Order Demand</span>
+        <span class="kpi-icon-pill icon-emerald"><i class="bi bi-bullseye"></i></span>
+      </div>
+      <div class="kpi-value">{{ total_demand_count|default:0 }}</div>
+      <div class="kpi-sub">Products requiring reorder</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">Top-Seller Priority</span>
+        <span class="kpi-icon-pill icon-amber"><i class="bi bi-fire"></i></span>
+      </div>
+      <div class="kpi-value text-amber">{{ top_demand_count|default:0 }}</div>
+      <div class="kpi-sub">Fastest-moving critical items</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">Recommended Units</span>
+        <span class="kpi-icon-pill icon-indigo"><i class="bi bi-box-seam"></i></span>
+      </div>
+      <div class="kpi-value">{{ total_demand_order_units|floatformat:0 }}</div>
+      <div class="kpi-sub">Total calculated volume</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">Critical Runway Risk</span>
+        <span class="kpi-icon-pill icon-rose"><i class="bi bi-exclamation-triangle"></i></span>
+      </div>
+      <div class="kpi-value text-rose">{{ critical_runway_count|default:0 }}</div>
+      <div class="kpi-sub">Stockout risk within 45 days</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">Standard Demand</span>
+        <span class="kpi-icon-pill icon-sky"><i class="bi bi-list-check"></i></span>
+      </div>
+      <div class="kpi-value">{{ standard_demand_count|default:0 }}</div>
+      <div class="kpi-sub">Baseline replenishment products</div>
+    </div>
+  </div>
+
+  {# SECTION 1: TOP & MOST SELLING PRIORITY SHOWCASE #}
+  <div class="priority-section-wrapper">
+    <div class="clean-section-header">
+      <div>
+        <div class="csh-title-row">
+          <h2>Top & Most Selling Priority Products</h2>
+          <span class="csh-pill">{{ top_demand_count|default:0 }} Critical Items</span>
+        </div>
+        <p class="csh-sub">High-velocity items requiring immediate purchase orders to prevent stockouts and preserve revenue continuity.</p>
+      </div>
+    </div>
+
+    <div class="priority-grid-container">
+      {% if top_selling_demand %}
+      <div class="priority-cards-grid">
+        {% for p in top_selling_demand %}
+        <div class="priority-item-card">
+          <div>
+            <div class="card-header-bar">
+              <span class="card-rank-tag"><i class="bi bi-star-fill text-amber" style="font-size:0.68rem"></i> #{{ p.priority_rank }} Top Seller</span>
+              {% if p.order_urgency == 'urgent' %}
+                <span class="urgency-pill pill-urgent"><span class="dot"></span> Urgent Reorder</span>
+              {% else %}
+                <span class="urgency-pill pill-warn"><span class="dot"></span> Needs Order</span>
+              {% endif %}
+            </div>
+
+            <h3 class="card-product-name" title="{{ p.name }}">{{ p.name }}</h3>
+
+            <div class="card-meta-line">
+              {% if p.category %}<span class="card-cat-badge">{{ p.category }}</span><span class="meta-dot">•</span>{% endif %}
+              <span>MOQ: <strong>{{ p.moq|default:"—" }}</strong></span>
+              <span class="meta-dot">•</span>
+              <span>Lead: <strong>{{ p.expected_delivery_days|default:"—" }}d</strong></span>
+              <span class="meta-dot">•</span>
+              <span class="text-emerald">Run Rate: {{ p.monthly_run_rate|floatformat:0 }}/mo</span>
+            </div>
+
+            <div class="card-stats-matrix">
+              <div class="stat-col">
+                <div class="stat-lbl">Daily Vel.</div>
+                <div class="stat-val text-emerald">{{ p.avg_daily|floatformat:1 }}<span class="stat-unit">/d</span></div>
+              </div>
+              <div class="stat-col">
+                <div class="stat-lbl">Stock</div>
+                <div class="stat-val">{{ p.current_stock|floatformat:0 }}<span class="stat-unit"> {{ p.unit }}</span></div>
+              </div>
+              <div class="stat-col">
+                <div class="stat-lbl">Runway</div>
+                <div class="stat-val {% if p.runway_days <= 30 %}text-rose{% elif p.runway_days <= 60 %}text-amber{% endif %}">
+                  {{ p.runway_days }}<span class="stat-unit">d</span>
+                </div>
+              </div>
+              <div class="stat-col">
+                <div class="stat-lbl">In Transit</div>
+                <div class="stat-val">{{ p.incoming_qty|floatformat:0 }}<span class="stat-unit"> {{ p.unit }}</span></div>
+              </div>
+            </div>
+
+            <div class="card-order-footer">
+              <div>
+                <span class="order-rec-label">Recommended Order</span>
+                <div class="order-rec-qty">{{ p.order_final|floatformat:0 }} <span class="order-rec-unit">{{ p.unit }}</span></div>
+              </div>
+              <button type="button" class="btn-locate-primary" onclick="scrollToProductRow({{ p.id }})">
+                Plan in Table <i class="bi bi-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="card-quick-actions">
+            <button type="button" class="btn-tool" onclick="openCustomerModal({{ p.id }}, '{{ p.name|escapejs }}')" title="Top 5 Customers">
+              <i class="bi bi-people"></i> Top 5
+            </button>
+            <button type="button" class="btn-tool" onclick="openSalesModal('{{ p.name|escapejs }}', {{ p.monthly_sales_json }}, {{ p.daily_sales_json }})" title="Sales Trends">
+              <i class="bi bi-graph-up-arrow"></i> Sales
+            </button>
+            <button type="button" class="btn-tool" onclick="openPOModal({{ p.id }}, '{{ p.name|escapejs }}')" title="Purchase Orders">
+              <i class="bi bi-receipt"></i> POs
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="background:#ffffff;border:1px dashed #cbd5e1;border-radius:12px;padding:36px 20px;text-align:center;color:#64748b;">
+        <i class="bi bi-check-circle" style="font-size:2rem;color:#059669;margin-bottom:8px;display:inline-block"></i>
+        <div style="font-weight:600;font-size:1rem;color:#0f172a">No High-Velocity Items in Immediate Danger</div>
+        <div style="font-size:0.85rem;margin-top:4px">All priority top-selling products currently maintain adequate safety stock runway.</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# SECTION 2: STANDARD DEMAND PRODUCTS #}
+  {% if standard_demand %}
+  <div class="standard-demand-wrapper">
+    <div class="clean-section-header" style="margin-bottom:14px">
+      <div>
+        <div class="csh-title-row">
+          <h3 style="font-size:1.05rem;font-weight:700;color:#0f172a;margin:0">Standard Demand Products</h3>
+          <span class="csh-pill" style="background:#f1f5f9;color:#475569;border-color:#e2e8f0">{{ standard_demand_count }} Products</span>
+        </div>
+        <p class="csh-sub">Steady replenishment items with positive order recommendations.</p>
+      </div>
+    </div>
+
+    <div class="std-table-scroll">
+      <table class="std-demand-table">
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th>Product Name</th>
+            <th>Urgency</th>
+            <th>Daily Velocity</th>
+            <th>Current Stock</th>
+            <th>Runway</th>
+            <th>In Transit</th>
+            <th>Order Recommendation</th>
+            <th style="text-align:center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in standard_demand %}
+          <tr>
+            <td style="font-weight:600;color:#94a3b8">{{ forloop.counter }}</td>
+            <td>
+              <div class="std-prod-name">{{ p.name }}</div>
+              <div class="std-prod-meta">
+                {% if p.category %}<span class="text-emerald">{{ p.category }}</span> • {% endif %}
+                MOQ: {{ p.moq|default:"—" }} • Lead: {{ p.expected_delivery_days|default:"—" }}d
+              </div>
+            </td>
+            <td>
+              {% if p.order_urgency == 'urgent' %}
+                <span class="urgency-pill pill-urgent"><span class="dot"></span> Urgent</span>
+              {% else %}
+                <span class="urgency-pill pill-warn"><span class="dot"></span> Order</span>
+              {% endif %}
+            </td>
+            <td>
+              <strong class="text-emerald">{{ p.avg_daily|floatformat:2 }}</strong>
+              <span style="font-size:0.72rem;color:#64748b">/day</span>
+            </td>
+            <td>
+              <strong>{{ p.current_stock|floatformat:0 }}</strong>
+              <span style="font-size:0.72rem;color:#64748b">{{ p.unit }}</span>
+            </td>
+            <td>
+              <span class="{% if p.runway_days <= 30 %}text-rose{% elif p.runway_days <= 60 %}text-amber{% endif %}" style="font-weight:700">
+                {{ p.runway_days }}d
+              </span>
+              <span style="font-size:0.72rem;color:#64748b">({{ p.months_of_stock|floatformat:1 }}m)</span>
+            </td>
+            <td>
+              <strong>{{ p.incoming_qty|floatformat:0 }}</strong>
+              <span style="font-size:0.72rem;color:#64748b">{{ p.unit }}</span>
+            </td>
+            <td>
+              <span style="font-weight:800;color:#047857;font-size:0.95rem">{{ p.order_final|floatformat:0 }}</span>
+              <span style="font-size:0.74rem;color:#059669;font-weight:600">{{ p.unit }}</span>
+            </td>
+            <td style="text-align:center">
+              <div class="std-actions-wrap">
+                <button type="button" class="btn-table-locate" onclick="scrollToProductRow({{ p.id }})" title="Plan in Table">
+                  Plan <i class="bi bi-arrow-right"></i>
+                </button>
+                <button type="button" class="btn-icon-sub" onclick="openCustomerModal({{ p.id }}, '{{ p.name|escapejs }}')" title="Top 5 Customers">
+                  <i class="bi bi-people"></i>
+                </button>
+                <button type="button" class="btn-icon-sub" onclick="openSalesModal('{{ p.name|escapejs }}', {{ p.monthly_sales_json }}, {{ p.daily_sales_json }})" title="Sales Trends">
+                  <i class="bi bi-graph-up-arrow"></i>
+                </button>
+                <button type="button" class="btn-icon-sub" onclick="openPOModal({{ p.id }}, '{{ p.name|escapejs }}')" title="Purchase Orders">
+                  <i class="bi bi-receipt"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+{# ── Full Catalog Planner View ──────────────────────────────────────── #}
+<div id="fullCatalogView" style="display:none;">
+
+  {# Quick Filter Chips Bar #}
+  <div class="catalog-filter-chips no-print">
+    <button type="button" class="cat-chip active" data-filter="all" onclick="filterCatalogTable('all', this)">
+      All Products <span class="c-badge">{{ products|length }}</span>
+    </button>
+    <button type="button" class="cat-chip" data-filter="top_sellers" onclick="filterCatalogTable('top_sellers', this)">
+      <i class="bi bi-star-fill text-amber" style="font-size:0.72rem"></i> Top Sellers <span class="c-badge">{{ top_demand_count|default:0 }}</span>
+    </button>
+    <button type="button" class="cat-chip" data-filter="demand" onclick="filterCatalogTable('demand', this)">
+      <i class="bi bi-lightning-charge text-emerald" style="font-size:0.72rem"></i> Order Demand <span class="c-badge">{{ total_demand_count|default:0 }}</span>
+    </button>
+    <button type="button" class="cat-chip" data-filter="urgent" onclick="filterCatalogTable('urgent', this)">
+      <span class="dot" style="width:6px;height:6px;border-radius:50%;background:#dc2626;display:inline-block"></span> Urgent <span class="c-badge" id="chipUrgentCount">—</span>
+    </button>
+    <button type="button" class="cat-chip" data-filter="warn" onclick="filterCatalogTable('warn', this)">
+      <span class="dot" style="width:6px;height:6px;border-radius:50%;background:#d97706;display:inline-block"></span> Need to Order <span class="c-badge" id="chipWarnCount">—</span>
+    </button>
+    <button type="button" class="cat-chip" data-filter="ok" onclick="filterCatalogTable('ok', this)">
+      <span class="dot" style="width:6px;height:6px;border-radius:50%;background:#059669;display:inline-block"></span> Sufficient <span class="c-badge" id="chipOkCount">—</span>
+    </button>
+    <button type="button" class="cat-chip" data-filter="dead" onclick="filterCatalogTable('dead', this)">
+      <i class="bi bi-clock-history" style="font-size:0.75rem"></i> Dead Stock <span class="c-badge" id="chipDeadCount">—</span>
+    </button>
+    <button type="button" class="cat-chip" data-filter="over" onclick="filterCatalogTable('over', this)">
+      <i class="bi bi-box-seam" style="font-size:0.75rem"></i> Overstocked <span class="c-badge" id="chipOverCount">—</span>
+    </button>
+  </div>
+
+  {# Summary strip #}
+  <div class="summary-strip no-print">
+    <div class="sc"><span class="sc-label">Total Catalog</span><span class="sc-value">{{ products|length }}</span></div>
+    <div class="sc danger"><span class="sc-label">Urgent Orders</span><span id="urgentCount" class="sc-value">—</span></div>
+    <div class="sc warn">  <span class="sc-label">Need to Order</span><span id="warnCount"   class="sc-value">—</span></div>
+    <div class="sc purple"><span class="sc-label">Dead Stock</span>   <span id="deadCount"   class="sc-value">—</span></div>
+    <div class="sc">       <span class="sc-label">Overstocked</span>  <span id="overCount"   class="sc-value">—</span></div>
+    <div class="sc green"> <span class="sc-label">Sufficient</span>   <span id="okCount"     class="sc-value">—</span></div>
+  </div>
 
 {# ── Table ────────────────────────────────────────────────────────────── #}
 <div class="table-scroll">
@@ -396,10 +1347,13 @@
   {% for p in products %}
 
   {# ── Data row ──────────────────────────────────────────────────────── #}
-  <tr class="data-row row-{{ p.order_urgency }}"
+  <tr class="data-row row-{{ p.order_urgency }} {% if p.is_top_seller %}is-top-seller{% endif %}"
+      id="prodRow-{{ p.id }}"
       data-urgency="{{ p.order_urgency }}"
       data-dead="{{ p.is_dead|yesno:'1,0' }}"
       data-over="{{ p.is_overstocked|yesno:'1,0' }}"
+      data-is-top="{{ p.is_top_seller|yesno:'1,0' }}"
+      data-has-demand="{% if p.order_urgency == 'urgent' or p.order_urgency == 'warn' or p.order_final > 0 %}1{% else %}0{% endif %}"
       data-math-id="math-{{ forloop.counter }}">
 
     <td class="cb-col no-print"><input type="checkbox" class="row-cb" value="{{ p.id }}"></td>
@@ -921,13 +1875,9 @@
 
   </div>
 </div>
+</div>{# ── /#fullCatalogView ── #}
 
-{% endif %}
-</div>
-
-{# ───────────────────────────────────────────────────────────────────────────
-   MODALS
-─────────────────────────────────────────────────────────────────────────── #}
+<!-- MODALS -->
 
 {# Top Customers Modal #}
 <div class="modal-overlay" id="custModal">
@@ -1014,9 +1964,9 @@
   </div>
 </div>
 
-{% endblock %}
+{% endif %}
+</div>{# .po-wrapper #}
 
-{% block extra_scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js"></script>
 <script>
@@ -1050,7 +2000,7 @@ function toggleDeadFilter() {
   const btn   = document.getElementById("deadFilterBtn");
   const isHiding = input.value === "1";
   input.value = isHiding ? "0" : "1";
-  btn.textContent = isHiding ? "💀 Hide Dead Stock" : "💀 Show Dead Stock";
+  btn.innerHTML = isHiding ? '<i class="bi bi-eye-slash"></i> Hide Dead Stock' : '<i class="bi bi-eye"></i> Show Dead Stock';
   btn.classList.toggle("active", !isHiding);
   document.getElementById("filterForm").submit();
 }
@@ -1069,7 +2019,111 @@ function toggleDeadFilter() {
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   set("urgentCount", urgent); set("warnCount", warn);
   set("deadCount", dead);     set("overCount", over); set("okCount", ok);
+  set("chipUrgentCount", urgent); set("chipWarnCount", warn);
+  set("chipDeadCount", dead);     set("chipOverCount", over); set("chipOkCount", ok);
 })();
+
+// ── View Switcher (Priority Demand Dashboard vs Full Catalog) ─────────────
+function switchPOView(mode) {
+  const dash = document.getElementById('demandDashboardView');
+  const cat = document.getElementById('fullCatalogView');
+  const tabDash = document.getElementById('tabDemandDashboard');
+  const tabCat = document.getElementById('tabFullCatalog');
+  if (!dash || !cat) return;
+
+  if (mode === 'catalog') {
+    dash.style.display = 'none';
+    cat.style.display = 'block';
+    if (tabDash) tabDash.classList.remove('active');
+    if (tabCat) tabCat.classList.add('active');
+    try { sessionStorage.setItem('po_active_view', 'catalog'); } catch(e) {}
+  } else {
+    dash.style.display = 'block';
+    cat.style.display = 'none';
+    if (tabDash) tabDash.classList.add('active');
+    if (tabCat) tabCat.classList.remove('active');
+    try { sessionStorage.setItem('po_active_view', 'dashboard'); } catch(e) {}
+  }
+}
+
+// ── Smooth Locate in Table with Glow Pulse ────────────────────────────────
+function scrollToProductRow(productId) {
+  switchPOView('catalog');
+
+  // Reset filter chip to 'all' so the row is guaranteed visible
+  const allChip = document.querySelector('.cat-chip[data-filter="all"]');
+  if (allChip) filterCatalogTable('all', allChip);
+
+  setTimeout(() => {
+    const row = document.getElementById('prodRow-' + productId);
+    if (row) {
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      row.classList.remove('row-highlight-pulse');
+      void row.offsetWidth; // force DOM reflow
+      row.classList.add('row-highlight-pulse');
+      setTimeout(() => { row.classList.remove('row-highlight-pulse'); }, 2500);
+    }
+  }, 120);
+}
+
+// ── Catalog Table Filter Chips ────────────────────────────────────────────
+function filterCatalogTable(type, btn) {
+  document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const rows = document.querySelectorAll('#poTable tbody tr.data-row');
+  rows.forEach(r => {
+    const urgency = r.dataset.urgency;
+    const isDead = r.dataset.dead === '1';
+    const isOver = r.dataset.over === '1';
+    const isTop = r.dataset.isTop === '1';
+    const hasDemand = r.dataset.hasDemand === '1';
+    const mathRowId = r.dataset.mathId;
+    const mathRow = mathRowId ? document.getElementById(mathRowId) : null;
+
+    let show = true;
+    if (type === 'all') {
+      show = true;
+    } else if (type === 'top_sellers') {
+      show = isTop;
+    } else if (type === 'demand') {
+      show = hasDemand;
+    } else if (type === 'urgent') {
+      show = (urgency === 'urgent');
+    } else if (type === 'warn') {
+      show = (urgency === 'warn');
+    } else if (type === 'ok') {
+      show = (urgency === 'ok');
+    } else if (type === 'dead') {
+      show = isDead;
+    } else if (type === 'over') {
+      show = isOver;
+    }
+
+    r.style.display = show ? '' : 'none';
+    if (!show && mathRow) {
+      mathRow.style.display = 'none';
+    }
+  });
+}
+
+// Initialize active view from URL hash or sessionStorage
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.location.hash === '#catalog') {
+    switchPOView('catalog');
+  } else {
+    try {
+      const savedView = sessionStorage.getItem('po_active_view');
+      if (savedView === 'catalog') {
+        switchPOView('catalog');
+      } else {
+        switchPOView('dashboard');
+      }
+    } catch(e) {
+      switchPOView('dashboard');
+    }
+  }
+});
 
 // ── Select-all checkbox ──────────────────────────────────────────────────────
 document.getElementById("selectAll")?.addEventListener("change", function () {
@@ -1584,4 +2638,5 @@ function openDailySalesModal(month) {
   openModal('dailySalesModal');
 }
 </script>
-{% endblock %}
+</body>
+</html>

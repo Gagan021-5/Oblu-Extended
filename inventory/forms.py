@@ -7,6 +7,8 @@ from .models import InventoryItem, Category
 
 
 # Custom registration form that extends the default UserCreationForm
+# SECURITY: 'role' is intentionally excluded — new users default to
+# Role.SALESPERSON and cannot self-assign privileged roles.
 User=get_user_model()
 class CustomUserCreationForm(UserCreationForm):
     class Meta:

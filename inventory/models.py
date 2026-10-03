@@ -8,12 +8,59 @@ from django.utils import timezone
 # Create your models here.
 
 class User(AbstractUser):
+    """
+    Custom user model for Oblu.
+    Extends AbstractUser with business role and legacy compatibility fields.
+    """
+
+    class Role(models.TextChoices):
+        ADMIN = "admin", "Admin"
+        SALES_HEAD = "sales_head", "Sales Head"
+        BUSINESS_MANAGER = "business_manager", "Business Manager"
+        HR = "hr", "HR"
+        ACCOUNTS_OPERATIONS = "accounts_operations", "Accounts & Operations"
+        WAREHOUSE = "warehouse", "Warehouse"
+        RSM = "rsm", "Regional Sales Manager"
+        ASM = "asm", "Area Sales Manager"
+        SALESPERSON = "salesperson", "Salesperson"
+
+    role = models.CharField(
+        max_length=30,
+        choices=Role.choices,
+        default=Role.SALESPERSON,
+        db_index=True,
+        help_text="Primary business role for access control.",
+    )
+
+    # ------------------------------------------------------------------
+    # Legacy fields — kept for backward compatibility. Do NOT remove yet.
+    # ------------------------------------------------------------------
     is_accountant = models.BooleanField(default=False)
     is_viewer = models.BooleanField(default=True)
-    pass
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+    def has_role(self, *roles):
+        """Return True if the user's role matches any of the given roles."""
+        return self.role in roles
+
+    @property
+    def is_sales_management(self):
+        """True for roles that manage salespeople (RSM, ASM, Sales Head)."""
+        return self.role in (
+            self.Role.RSM,
+            self.Role.ASM,
+            self.Role.SALES_HEAD,
+        )
+
+    @property
+    def role_display(self):
+        """Human-readable label for the current role."""
+        return self.get_role_display()
 
 class InventoryItem(models.Model):
-    name=models.CharField(max_length=200)
+    name=models.CharField(max_length=200, db_index=True)
     quantity=models.IntegerField(null=True)
     category=models.ForeignKey('Category', on_delete=models.SET_NULL, blank=True, null=True)
     date_created=models.DateTimeField(auto_now_add=True)
@@ -37,6 +84,14 @@ class InventoryItem(models.Model):
         help_text="Minimum quantity that must be ordered from the supplier in a single batch"
     )
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['name']),
+            models.Index(fields=['category', 'name']),
+            models.Index(fields=['quantity']),
+            models.Index(fields=['min_quantity']),
+            models.Index(fields=['min_quantity_outwards']),
+        ]
 
     def __str__(self):
         return self.name
@@ -66,7 +121,7 @@ class InventoryItem(models.Model):
         return history
 
 class Category(models.Model):
-    name=models.CharField(max_length=200)
+    name=models.CharField(max_length=200, db_index=True)
 
     class Meta:
         verbose_name_plural="Categories"
@@ -94,6 +149,10 @@ class MonthlyStockData(models.Model):
     class Meta:
         unique_together = ('product', 'month', 'year')
         ordering = ['-year', '-month']
+        indexes = [
+            models.Index(fields=['year', 'month']),
+            models.Index(fields=['product', 'year', 'month']),
+        ]
 
     def __str__(self):
         month_name = calendar.month_name[self.month]
@@ -147,6 +206,11 @@ class DailyStockData(models.Model):
     class Meta:
         ordering = ['-date']
         unique_together = ('product', 'date', 'voucher_type','inwards_quantity','outwards_quantity','closing_quantity')
+        indexes = [
+            models.Index(fields=['date']),
+            models.Index(fields=['date', 'outwards_quantity']),
+            models.Index(fields=['product', 'date']),
+        ]
 
 
     def __str__(self):

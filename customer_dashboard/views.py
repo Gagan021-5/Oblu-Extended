@@ -406,13 +406,7 @@ class AdminSalesPersonCustomersView(AccountantRequiredMixin, TemplateView):
                     or customer.last_order_date < cutoff_date
             )
 
-        # ── STATUS FILTER (PYTHON LEVEL) ──────────────────────────────── #
-        if status_filter == "active":
-            customers = [c for c in customers if not c.is_red_flag]
-        elif status_filter == "inactive":
-            customers = [c for c in customers if c.is_red_flag]
-
-        # ── BUILD UNITS + STANDALONE LIST ────────────────────────────── #
+        # ── BUILD UNITS + STANDALONE LIST (ALL CUSTOMERS) ─────────────── #
         # Map unit_id → list of enriched customers
         unit_map = {}  # {unit_id: {"unit": CustomerUnit, "members": [...]}}
         standalone = []  # customers not in any unit
@@ -427,17 +421,17 @@ class AdminSalesPersonCustomersView(AccountantRequiredMixin, TemplateView):
             else:
                 standalone.append(customer)
 
-        # Build enriched unit objects
+        # Build enriched unit objects with complete member telemetry
         enriched_units = []
         for uid, data in unit_map.items():
             unit_obj = data["unit"]
             members = data["members"]
             unit_obj.members = members
 
-            # unit is active if at least one member is active
+            # Unit is active if at least one member is active; inactive only if ALL members are inactive
             unit_obj.is_red_flag = all(m.is_red_flag for m in members)
 
-            # aggregate financials for display
+            # Aggregate financials for display
             unit_obj.total_orders = sum(m.total_orders for m in members)
             unit_obj.total_order_value = sum(m.total_order_value for m in members)
 
@@ -455,11 +449,7 @@ class AdminSalesPersonCustomersView(AccountantRequiredMixin, TemplateView):
 
             enriched_units.append(unit_obj)
 
-        # ── ALL UNITS FOR THIS SALESPERSON (for "add to existing unit" dropdown) #
-        all_units = CustomerUnit.objects.filter(salesperson=salesperson).order_by("name")
-
-        # ── STATS (across both units and standalone) ──────────────────── #
-        # Each unit counts as 1; each standalone counts as 1
+        # ── STATS (across both units and standalone for this salesperson) ── #
         all_display_items = enriched_units + standalone
         active_count = sum(1 for x in all_display_items if not x.is_red_flag)
         inactive_count = sum(1 for x in all_display_items if x.is_red_flag)
@@ -473,6 +463,21 @@ class AdminSalesPersonCustomersView(AccountantRequiredMixin, TemplateView):
                 outstanding_count += 1
                 total_outstanding_amount += bal
 
+        # ── STATUS FILTER (DISPLAY LEVEL) ─────────────────────────────── #
+        # Filter units and standalone without distorting the unit classification
+        if status_filter == "active":
+            displayed_units = [u for u in enriched_units if not u.is_red_flag]
+            displayed_standalone = [c for c in standalone if not c.is_red_flag]
+        elif status_filter == "inactive":
+            displayed_units = [u for u in enriched_units if u.is_red_flag]
+            displayed_standalone = [c for c in standalone if c.is_red_flag]
+        else:
+            displayed_units = enriched_units
+            displayed_standalone = standalone
+
+        # ── ALL UNITS FOR THIS SALESPERSON (for "add to existing unit" dropdown) #
+        all_units = CustomerUnit.objects.filter(salesperson=salesperson).order_by("name")
+
         # ── FOLLOW-UPS ────────────────────────────────────────────────── #
         today = date.today()
 
@@ -485,8 +490,8 @@ class AdminSalesPersonCustomersView(AccountantRequiredMixin, TemplateView):
         ctx["followups_future"] = all_followups.filter(followup_date__gt=today)
 
         # ── CONTEXT ───────────────────────────────────────────────────── #
-        ctx["customers"] = standalone  # standalone (no unit)
-        ctx["units"] = enriched_units  # unit groups
+        ctx["customers"] = displayed_standalone  # standalone (no unit)
+        ctx["units"] = displayed_units  # unit groups
         ctx["all_units"] = all_units  # for dropdown
         ctx["total_display_count"] = total_display
         ctx["active_count"] = active_count
@@ -757,13 +762,7 @@ class AdminSalesPersonCustomersView(LoginRequiredMixin,TemplateView):
                     or customer.last_order_date < cutoff_date
             )
 
-        # ── STATUS FILTER (PYTHON LEVEL) ──────────────────────────────── #
-        if status_filter == "active":
-            customers = [c for c in customers if not c.is_red_flag]
-        elif status_filter == "inactive":
-            customers = [c for c in customers if c.is_red_flag]
-
-        # ── BUILD UNITS + STANDALONE LIST ────────────────────────────── #
+        # ── BUILD UNITS + STANDALONE LIST (ALL CUSTOMERS) ─────────────── #
         unit_map = {}
         standalone = []
 
@@ -782,6 +781,7 @@ class AdminSalesPersonCustomersView(LoginRequiredMixin,TemplateView):
             unit_obj = data["unit"]
             members = data["members"]
             unit_obj.members = members
+            # Unit is active if at least one member is active; inactive only if ALL members are inactive
             unit_obj.is_red_flag = all(m.is_red_flag for m in members)
             unit_obj.total_orders = sum(m.total_orders for m in members)
             unit_obj.total_order_value = sum(m.total_order_value for m in members)
@@ -799,7 +799,7 @@ class AdminSalesPersonCustomersView(LoginRequiredMixin,TemplateView):
 
         all_units = CustomerUnit.objects.filter(salesperson=salesperson).order_by("name")
 
-        # ── STATS ─────────────────────────────────────────────────────── #
+        # ── STATS (across both units and standalone for this salesperson) ── #
         all_display_items = enriched_units + standalone
         active_count = sum(1 for x in all_display_items if not x.is_red_flag)
         inactive_count = sum(1 for x in all_display_items if x.is_red_flag)
@@ -813,6 +813,17 @@ class AdminSalesPersonCustomersView(LoginRequiredMixin,TemplateView):
                 outstanding_count += 1
                 total_outstanding_amount += bal
 
+        # ── STATUS FILTER (DISPLAY LEVEL) ─────────────────────────────── #
+        if status_filter == "active":
+            displayed_units = [u for u in enriched_units if not u.is_red_flag]
+            displayed_standalone = [c for c in standalone if not c.is_red_flag]
+        elif status_filter == "inactive":
+            displayed_units = [u for u in enriched_units if u.is_red_flag]
+            displayed_standalone = [c for c in standalone if c.is_red_flag]
+        else:
+            displayed_units = enriched_units
+            displayed_standalone = standalone
+
         # ── FOLLOW-UPS ────────────────────────────────────────────────── #
         today = date.today()
         all_followups = CustomerFollowUp.objects.filter(
@@ -823,8 +834,8 @@ class AdminSalesPersonCustomersView(LoginRequiredMixin,TemplateView):
         ctx["followups_today"] = all_followups.filter(followup_date=today)
         ctx["followups_future"] = all_followups.filter(followup_date__gt=today)
 
-        ctx["customers"] = standalone
-        ctx["units"] = enriched_units
+        ctx["customers"] = displayed_standalone
+        ctx["units"] = displayed_units
         ctx["all_units"] = all_units
         ctx["total_display_count"] = total_display
         ctx["active_count"] = active_count

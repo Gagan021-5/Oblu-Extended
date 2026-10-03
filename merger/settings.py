@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'tally_voucher',
     'proforma_invoice',
     'quotations',
+    'access_control',
     'inventory',
     'customer_dashboard',
     'crispy_forms',
@@ -61,6 +62,7 @@ INSTALLED_APPS = [
 
 
 MIDDLEWARE = [
+    'django.middleware.gzip.GZipMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'request_logs.middleware.RequestLoggingMiddleware',

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>OBLU — Internal Tools Suite</title>
   <meta name="description" content="OBLU Internal Suite — Your unified productivity tools platform for inventory, sales, invoicing, and analytics." />
-  <link rel="icon" type="image/png" href="https://oblu-static-media.s3.ap-south-1.amazonaws.com/vector_panda_logo.png">
+  <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+  <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+  <link rel="apple-touch-icon" href="{% static 'images/oblu_panda_icon.png' %}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     /* =========================================================
@@ -228,10 +231,13 @@
     }
 
     .nav-brand-logo {
-      width: 32px;
-      height: 32px;
-      object-fit: contain;
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: #000;
+      object-fit: cover;
       transition: transform 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
     }
 
     .nav-brand:hover .nav-brand-logo {
@@ -619,7 +625,7 @@
   <div class="intro-splash" id="introSplash">
     <div class="intro-logo-container">
       <img
-        src="https://oblu-static-media.s3.ap-south-1.amazonaws.com/vector_panda_logo.png"
+        src="{% static 'images/oblu_panda_icon.png' %}"
         alt="OBLU Logo"
         class="intro-logo"
       />
@@ -647,7 +653,7 @@
     <nav class="navbar" id="navbar">
       <a href="" class="nav-brand">
         <img
-          src="https://oblu-static-media.s3.ap-south-1.amazonaws.com/vector_panda_logo.png"
+          src="{% static 'images/oblu_panda_icon.png' %}"
           alt="OBLU"
           class="nav-brand-logo"
         />
